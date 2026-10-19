@@ -1,43 +1,67 @@
 # Sahaara
 
-A security-first, accessible service platform for adults 40+, senior citizens, pensioners, veterans, and trusted family supporters.
+Sahaara is an accessible mobile-first service platform concept for adults aged 40+, senior citizens, pensioners, veterans, and trusted family supporters.
 
-## Starter status
+## Current repository status
 
-This repository contains the initial scaffold. It is not a production deployment.
+The native Android and SwiftUI screens now include a branded service dashboard, a Hindi/English toggle, and interactive reminder creation/completion using in-screen demo state. The Go API remains a starter service with health endpoints and an explicitly labelled demo dashboard. This is a development preview, not a production-ready application.
 
-- Go standard-library HTTP API with health/readiness endpoints and explicitly labelled demo dashboard.
-- PostgreSQL schema migration and OpenAPI contract.
-- Kotlin Multiplatform shared domain foundation; Android Jetpack Compose entry screen; iOS SwiftUI entry screen.
-- Java/Spring Boot + Vaadin admin foundation.
-- Minimal Terraform AWS scaffold and GitHub Actions checks.
+## What's implemented
 
-## Security limitations
+- **Android:** Kotlin + Jetpack Compose accessible dashboard, service tiles, language toggle, and local reminder interactions.
+- **iOS:** SwiftUI dashboard, language toggle, service tiles, and local reminder interactions.
+- **Backend:** Go standard-library HTTP server, health/readiness endpoints, demo dashboard payload, security headers, panic recovery, and unit tests.
+- **Data design:** initial PostgreSQL schema migration for users, reminders, trusted contacts, and document metadata.
+- **Contracts and operations:** OpenAPI starter, Dockerfile, GitHub Actions workflows, security baseline, and Terraform scaffold.
 
-Authentication and authorization are not wired. Do not expose the API publicly. No government, pension, bank, insurance, healthcare, or ECHS integration is implemented. Dashboard content is demo data. Terraform is not production-ready. Document upload and trusted-contact consent are not implemented.
+## Important limitations
 
-## Run the Go API
+- Reminder UI state is local to the current screen and resets when the app restarts. It is not yet synced to the Go API or PostgreSQL.
+- Authentication, authorization, account recovery, secure document uploads, trusted-contact consent, notifications, and user-scoped persistence are not yet implemented end to end.
+- No AWS production resources have been deployed or verified.
+- No government, pension, banking, insurance, healthcare, or ECHS integration is connected.
+- The iOS source file is present, but an Xcode project/workspace and signed iOS build pipeline are not yet included.
+- The Java/Vaadin admin portal and Terraform are starter scaffolds, not production systems.
+
+**Do not expose the API publicly or put real personal, health, pension, identity, or financial data into this preview.** User-entered content must never be described as verified government information. Never store bank passwords, OTPs, PINs, or raw credentials.
+
+## Run the Go API locally
 
 Requires Go 1.23+.
 
 ```sh
 cd backend
 go test ./...
+go vet ./...
 go run ./cmd/api
 ```
 
-Listens on `:8080` by default.
+The API listens on `:8080` by default.
 
 - `GET /healthz` — liveness
-- `GET /readyz` — process-only readiness; add dependency checks before production
-- `GET /v1/dashboard` — demo payload only; replace with authenticated, user-scoped persistence before public use
+- `GET /readyz` — process-only readiness (dependency health is not checked)
+- `GET /v1/dashboard` — demo-only payload
 
-## Next milestones
+## Build Android
 
-1. Add OIDC authentication, authorization middleware, and user-scoped data access.
-2. Add PostgreSQL pool, migrations runner, repositories, and integration tests.
-3. Add secure S3 upload intents, validation/scanning, and short-lived access URLs.
-4. Implement idempotent reminder jobs and delivery status.
-5. Integrate native app authentication, API calls, offline cache, and accessibility tests.
-6. Add environment-specific AWS Terraform, GitHub OIDC CI role, secret management, alarms, backups, and restore drills.
-7. Complete threat modeling, privacy review, and independent security testing.
+Open the repository root in Android Studio, allow Gradle sync, then run the `apps.android` configuration on an emulator or device. From a command line with Java 17, Android SDK, and Gradle 8.12 available:
+
+```sh
+gradle :shared:allTests :apps:android:assembleDebug
+```
+
+The generated APK is expected under `apps/android/build/outputs/apk/debug/` after a successful build.
+
+## iOS
+
+Open `apps/ios/SahaaraApp.swift` in an Xcode iOS App project configured for SwiftUI. The repository currently contains the SwiftUI source but not a complete Xcode project/workspace; a native iOS build has not been verified.
+
+## Next critical milestones
+
+1. Add an OIDC/OAuth identity provider and server-side authorization.
+2. Connect PostgreSQL with a migration runner, repositories, ownership enforcement, and integration tests.
+3. Persist reminders and connect the mobile apps to authenticated API endpoints.
+4. Implement private S3 upload intents, file validation/scanning, and short-lived download URLs.
+5. Implement trusted-contact invitation and consent lifecycle.
+6. Configure AWS infrastructure with least-privilege IAM, managed secrets, backups, logs, metrics, alarms, and restore testing.
+7. Complete Android/iOS build verification, accessibility testing, threat modeling, privacy review, and independent security testing before launch.
