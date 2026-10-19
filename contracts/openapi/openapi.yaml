@@ -1,0 +1,34 @@
+openapi: 3.1.0
+info:
+  title: Sahaara API
+  version: 0.1.0
+  description: Starter contract only. Authentication is not implemented; do not expose publicly.
+servers:
+  - url: http://localhost:8080
+paths:
+  /healthz:
+    get:
+      summary: Process liveness
+      responses:
+        "200": { description: Process is alive }
+  /readyz:
+    get:
+      summary: Process-only readiness
+      responses:
+        "200": { description: Process initialized; dependencies are not checked }
+  /v1/dashboard:
+    get:
+      summary: Demo dashboard payload
+      description: Sample data only. No authentication or user-scoped persistence is implemented.
+      responses:
+        "200":
+          description: Demo payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mode: { type: string, const: demo }
+                  message: { type: string }
+                  reminders: { type: array, items: { type: object } }
+                  services: { type: array, items: { type: string } }
