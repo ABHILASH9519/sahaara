@@ -19,17 +19,16 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.12"
-      # Pin a stable command-line tools release. The runner's preinstalled SDK
-      # was a preview build; setup-android tried installing the removed legacy
-      # "tools" package and exited before Gradle could run.
       - uses: android-actions/setup-android@v3
         with:
-          cmdline-tools-version: "11076708"
-          packages: |
-            platform-tools
-            platforms;android-35
-            build-tools;35.0.0
-          accept-android-sdk-licenses: true
+          cmdline-tools-version: "latest"
+      # Install packages explicitly: setup-android's packages input parsed
+      # semicolon-containing package IDs incorrectly on the previous run.
+      - name: Install stable Android SDK packages
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
       - name: Verify Android SDK
         run: |
           test -x "$ANDROID_HOME/platform-tools/adb"
