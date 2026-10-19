@@ -24,17 +24,38 @@ jobs:
         with:
           gradle-version: "8.12"
 
+      # Override setup-android's default legacy "tools" package, which no
+      # longer exists in Google's SDK repository. Install required packages below.
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: |
-            cmdline-tools;latest
-            platform-tools
-            platforms;android-35
-            build-tools;35.0.0
+          packages: "platform-tools"
 
-      - name: Accept Android SDK licenses
-        run: yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --licenses
+      - name: Install Android SDK components and accept licenses
+        shell: bash
+        run: |
+          set -euo pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
+
+      - name: Verify Android SDK installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -x "$ANDROID_HOME/platform-tools/adb"
+          test -d "$ANDROID_HOME/platforms/android-35"
+          test -d "$ANDROID_HOME/build-tools/35.0.0"
 
       - name: Run shared tests and build Android debug APK
         run: gradle --no-daemon :shared:allTests :apps:android:assembleDebug
+
+      - name: Upload Android debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: sahaara-android-debug-apk
+          path: apps/android/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
