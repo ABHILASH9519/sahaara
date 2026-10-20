@@ -216,6 +216,22 @@ private fun ServiceDetail(selected:String,onAction:(String)->Unit,onHome:()->Uni
             item { OutlinedTextField(value=minAge,onValueChange={minAge=it.filter(Char::isDigit).take(3)},modifier=Modifier.fillMaxWidth(),label={Text("Minimum age (optional)")},singleLine=true) }
             item { Row(verticalAlignment=Alignment.CenterVertically) { Checkbox(checked=pensionersOnly,onCheckedChange={pensionersOnly=it}); Text("Pensioner profiles only",color=Ink) } }
             item { Text("${filtered.size} matching profiles",fontWeight=FontWeight.Bold,fontSize=18.sp,color=Forest) }
+            item {
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                    listOf(
+                        "Pensioners" to filtered.count { it.pensioner }.toString(),
+                        "Veterans" to filtered.count { it.veteran }.toString(),
+                        "Property owners" to filtered.count { it.propertyOwner }.toString()
+                    ).forEach { (label, value) ->
+                        Card(Modifier.weight(1f),colors=CardDefaults.cardColors(containerColor=Sage),shape=RoundedCornerShape(14.dp)) {
+                            Column(Modifier.fillMaxWidth().padding(vertical=12.dp,horizontal=8.dp),horizontalAlignment=Alignment.CenterHorizontally) {
+                                Text(value,fontSize=21.sp,fontWeight=FontWeight.Bold,color=Forest)
+                                Text(label,fontSize=10.sp,color=Ink)
+                            }
+                        }
+                    }
+                }
+            }
             if (loadError) item { Text("No profile data available.",color=Color(0xFF9B2C2C)) }
             items(filtered.take(100),key={it.id}) { p ->
                 Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(16.dp)) {
