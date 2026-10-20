@@ -4,11 +4,11 @@ Sahaara is an accessible mobile-first service platform concept for adults aged 4
 
 ## Current repository status
 
-The native Android and SwiftUI screens now include a branded service dashboard, a Hindi/English toggle, and interactive reminder creation/completion using in-screen demo state. The Go API provides health endpoints, a demo dashboard, and a filterable API over 500 clearly labelled synthetic Indian profiles. This is a development preview, not a production-ready application.
+The native Android and SwiftUI screens include a branded service dashboard, a Hindi/English toggle, and interactive reminder creation/completion. Android demo reminders are now persisted locally using app-private preferences; they are not synced to a server. The Go API provides health endpoints, a demo dashboard, and a filterable API over 500 clearly labelled synthetic Indian profiles. This is a development preview, not a production-ready application.
 
 ## What's implemented
 
-- **Android:** Kotlin + Jetpack Compose accessible dashboard, service tiles, language toggle, and local reminder interactions.
+- **Android:** Kotlin + Jetpack Compose accessible dashboard, service tiles, language toggle, local reminder interactions, reminder persistence across restarts, and an offline synthetic-profile explorer.
 - **iOS:** SwiftUI dashboard, language toggle, service tiles, and local reminder interactions.
 - **Backend:** Go standard-library HTTP server, health/readiness endpoints, demo dashboard, embedded 500-profile synthetic dataset API, summary metrics, filtering/pagination, security headers, panic recovery, and unit tests.
 - **Data design:** initial PostgreSQL schema migration for users, reminders, trusted contacts, and document metadata.
@@ -16,7 +16,7 @@ The native Android and SwiftUI screens now include a branded service dashboard, 
 
 ## Important limitations
 
-- Reminder UI state is local to the current screen and resets when the app restarts. It is not yet synced to the Go API or PostgreSQL.
+- Android reminders persist locally on the same device across app restarts, but are not encrypted as a dedicated vault, backed up, user-scoped, or synced to the Go API/PostgreSQL. iOS reminder persistence is not verified.
 - Authentication, authorization, account recovery, secure document uploads, trusted-contact consent, notifications, and user-scoped persistence are not yet implemented end to end.
 - No AWS production resources have been deployed or verified.
 - No government, pension, banking, insurance, healthcare, or ECHS integration is connected.
@@ -54,7 +54,7 @@ Open the repository root in Android Studio, allow Gradle sync, then run the `app
 gradle :shared:allTests :apps:android:assembleDebug
 ```
 
-The generated APK is expected under `apps/android/build/outputs/apk/debug/` after a successful build.
+The generated APK is expected under `apps/android/build/outputs/apk/debug/` after a successful build. The GitHub Actions workflow also uploads a `sahaara-android-debug-apk` artifact for successful builds. This debug artifact is for development/testing, not production distribution.
 
 ## iOS
 
