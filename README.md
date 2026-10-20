@@ -16,7 +16,7 @@ The native Android and SwiftUI screens include a branded service dashboard, a Hi
 
 ## Important limitations
 
-- Android reminders persist locally on the same device across app restarts, but are not encrypted as a dedicated vault, backed up, user-scoped, or synced to the Go API/PostgreSQL. iOS reminder persistence is not verified.
+- Android reminders persist locally on the same device across app restarts, and iOS reminders use UserDefaults. Neither is encrypted as a dedicated vault, backed up, user-scoped, or synced to the Go API/PostgreSQL.
 - Authentication, authorization, account recovery, secure document uploads, trusted-contact consent, notifications, and user-scoped persistence are not yet implemented end to end.
 - No AWS production resources have been deployed or verified.
 - No government, pension, banking, insurance, healthcare, or ECHS integration is connected.
