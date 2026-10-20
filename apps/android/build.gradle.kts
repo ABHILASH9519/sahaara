@@ -8,8 +8,13 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+        val apiBaseUrl = providers.gradleProperty("SAHAARA_API_BASE_URL").orElse("").get()
+        buildConfigField("String", "SAHAARA_API_BASE_URL", "\\"$apiBaseUrl\\"")
     }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     // Keep Java and Kotlin bytecode targets aligned to avoid Gradle's
     // inconsistent JVM-target compatibility failure.
     compileOptions {
