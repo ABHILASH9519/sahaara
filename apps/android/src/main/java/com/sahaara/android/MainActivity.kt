@@ -22,6 +22,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 private val Forest = Color(0xFF205C4B)
 private val Sage = Color(0xFFDCE9DF)
@@ -51,6 +55,8 @@ private fun SahaaraApp() {
     var selected by remember { mutableStateOf<String?>(null) }
     var showAdd by remember { mutableStateOf(false) }
     var newTitle by remember { mutableStateOf("") }
+    var newDueMillis by remember { mutableStateOf(LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()) }
+    var showDatePicker by remember { mutableStateOf(false) }
     var nextId by remember { mutableIntStateOf(3) }
     var reminders by remember { mutableStateOf(listOf(ReminderItem(1,"Review policy documents","15 Nov 2026"),ReminderItem(2,"Check life-certificate guidance","30 Nov 2026"))) }
     var remindersLoaded by remember { mutableStateOf(false) }
@@ -117,7 +123,39 @@ private fun SahaaraApp() {
                 ServiceDetail(selected=selected!!,onAction={ action -> selected=action },onHome={selected=null})
             }
         }
-        if(showAdd) AlertDialog(onDismissRequest={showAdd=false},title={Text("Add a reminder")},text={OutlinedTextField(value=newTitle,onValueChange={newTitle=it},label={Text("Reminder title")},singleLine=true)},confirmButton={TextButton(onClick={val title=newTitle.trim();if(title.isNotEmpty()){reminders=reminders+ReminderItem(nextId++,title,"Date to be set");newTitle="";showAdd=false}}){Text("Add")}},dismissButton={TextButton(onClick={showAdd=false}){Text("Cancel")}})
+        if(showAdd) AlertDialog(
+            onDismissRequest={showAdd=false},
+            title={Text("Add a reminder")},
+            text={
+                Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(value=newTitle,onValueChange={newTitle=it},label={Text("Reminder title")},singleLine=true)
+                    OutlinedButton(onClick={showDatePicker=true},modifier=Modifier.fillMaxWidth()) {
+                        Text("Due date: ${Instant.ofEpochMilli(newDueMillis).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}")
+                    }
+                }
+            },
+            confirmButton={TextButton(onClick={
+                val title=newTitle.trim()
+                if(title.isNotEmpty()) {
+                    val due=Instant.ofEpochMilli(newDueMillis).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+                    reminders=reminders+ReminderItem(nextId++,title,due)
+                    newTitle=""
+                    showAdd=false
+                }
+            }){Text("Add")}},
+            dismissButton={TextButton(onClick={showAdd=false}){Text("Cancel")}}
+        )
+        if(showDatePicker) {
+            val dateState = rememberDatePickerState(initialSelectedDateMillis=newDueMillis)
+            DatePickerDialog(
+                onDismissRequest={showDatePicker=false},
+                confirmButton={TextButton(onClick={
+                    dateState.selectedDateMillis?.let { newDueMillis=it }
+                    showDatePicker=false
+                }){Text("Set date")}},
+                dismissButton={TextButton(onClick={showDatePicker=false}){Text("Cancel")}}
+            ) { DatePicker(state=dateState) }
+        }
     }
 }
 
