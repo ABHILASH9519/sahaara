@@ -121,7 +121,7 @@ private fun SahaaraApp() {
     }
 }
 
-private data class DemoProfile(
+internal data class DemoProfile(
     val id:String, val name:String, val age:Int, val city:String, val state:String,
     val area:String, val occupation:String, val lifestyle:String, val experience:Int,
     val householdIncome:Long, val personalEarnings:Long, val landAcres:Double,
