@@ -111,7 +111,7 @@ private fun SahaaraApp() {
                             }
                         }
                     }
-                    item { Text("Demo data stays on this device screen and resets on restart. No sign-in, secure sync or official integrations are enabled.",fontSize=12.sp,color=Color(0xFF61716B)) }
+                    item { Text("Demo reminders are saved locally on this device. No sign-in, secure sync or official integrations are enabled.",fontSize=12.sp,color=Color(0xFF61716B)) }
                 }
             } else {
                 ServiceDetail(selected=selected!!,onAction={ action -> selected=action },onHome={selected=null})
@@ -157,7 +157,7 @@ private fun ServiceDetail(selected:String,onAction:(String)->Unit,onHome:()->Uni
                 profiles = context.assets.open("demo-profiles.csv").bufferedReader().useLines { lines ->
                     lines.drop(1).mapNotNull { line ->
                         val f = line.split(",")
-                        if (f.size < 21) null else try {
+                        if (f.size < 20) null else try {
                             DemoProfile(
                                 f[0], f[1], f[2].toInt(), f[3], f[4], f[5], f[6], f[7],
                                 f[8].toInt(), f[9].toLong(), f[10].toLong(),
