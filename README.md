@@ -4,13 +4,13 @@ Sahaara is an accessible mobile-first service platform concept for adults aged 4
 
 ## Current repository status
 
-The native Android and SwiftUI screens now include a branded service dashboard, a Hindi/English toggle, and interactive reminder creation/completion using in-screen demo state. The Go API remains a starter service with health endpoints and an explicitly labelled demo dashboard. This is a development preview, not a production-ready application.
+The native Android and SwiftUI screens now include a branded service dashboard, a Hindi/English toggle, and interactive reminder creation/completion using in-screen demo state. The Go API provides health endpoints, a demo dashboard, and a filterable API over 500 clearly labelled synthetic Indian profiles. This is a development preview, not a production-ready application.
 
 ## What's implemented
 
 - **Android:** Kotlin + Jetpack Compose accessible dashboard, service tiles, language toggle, and local reminder interactions.
 - **iOS:** SwiftUI dashboard, language toggle, service tiles, and local reminder interactions.
-- **Backend:** Go standard-library HTTP server, health/readiness endpoints, demo dashboard payload, security headers, panic recovery, and unit tests.
+- **Backend:** Go standard-library HTTP server, health/readiness endpoints, demo dashboard, embedded 500-profile synthetic dataset API, summary metrics, filtering/pagination, security headers, panic recovery, and unit tests.
 - **Data design:** initial PostgreSQL schema migration for users, reminders, trusted contacts, and document metadata.
 - **Contracts and operations:** OpenAPI starter, Dockerfile, GitHub Actions workflows, security baseline, and Terraform scaffold.
 
@@ -41,6 +41,10 @@ The API listens on `:8080` by default.
 - `GET /healthz` — liveness
 - `GET /readyz` — process-only readiness (dependency health is not checked)
 - `GET /v1/dashboard` — demo-only payload
+- `GET /v1/demo/profiles?page=1&page_size=25` — synthetic profiles (max page size 100); supports `q`, `city`, `state`, `area_type`, `occupation`, `age_min`, `age_max`, `income_min`, `income_max`
+- `GET /v1/demo/summary` — aggregate metrics from the synthetic profiles
+
+The profile API is for UI development and testing only. It does not contain real individuals or verified government, market, land-value, income, health, pension, or service-coverage statistics. The source CSV is available at `data/demo/india-500-synthetic-profiles.csv`.
 
 ## Build Android
 
