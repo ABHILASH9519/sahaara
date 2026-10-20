@@ -9,7 +9,7 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         val apiBaseUrl = providers.gradleProperty("SAHAARA_API_BASE_URL").orElse("").get()
-        buildConfigField("String", "SAHAARA_API_BASE_URL", "\\"$apiBaseUrl\\"")
+        buildConfigField("String", "SAHAARA_API_BASE_URL", "\"$apiBaseUrl\"")
     }
     buildFeatures {
         compose = true
