@@ -4,7 +4,7 @@ Sahaara is an accessible mobile-first service platform concept for adults aged 4
 
 ## Current repository status
 
-The native Android and SwiftUI screens include a branded service dashboard, a Hindi/English toggle, and interactive reminder creation/completion. Android demo reminders are now persisted locally using app-private preferences; they are not synced to a server. The Go API provides health endpoints, a demo dashboard, and a filterable API over 500 clearly labelled synthetic Indian profiles. This is a development preview, not a production-ready application.
+The native Android and SwiftUI screens include a branded service dashboard, a Hindi/English toggle, and interactive reminder creation/completion with a date picker. Android demo reminders are now persisted locally using app-private preferences; they are not synced to a server. The Go API provides health endpoints, a demo dashboard, and a filterable API over 500 clearly labelled synthetic Indian profiles. This is a development preview, not a production-ready application.
 
 ## What's implemented
 
@@ -87,4 +87,4 @@ Open `apps/ios/SahaaraApp.swift` in an Xcode iOS App project configured for Swif
 
 The Android app bundles `apps/android/src/main/assets/demo-profiles.csv` so the Community Insights screen can work offline. It supports searching across profile ID/name/city/state/occupation, filtering by city or state text, minimum age, and pensioner status. It displays up to 100 matching profiles at a time. All 500 records are synthetic test fixtures, not real people or verified statistics; land values and coverage figures must not be used for financial, property, healthcare, or eligibility decisions.
 
-The Go demo API exposes `GET /v1/demo/profiles` and `GET /v1/demo/summary`, but it is not deployed. The Android screen currently reads the bundled CSV and does not call the Go API. Do not expose the unauthenticated demo endpoints publicly. Production user data, secure document storage, authentication/authorization, persistence, official integrations, and cloud deployment remain unfinished.
+The Go demo API exposes `GET /v1/demo/profiles` and `GET /v1/demo/summary`, but it is not deployed. The Android screen attempts the configured Go demo API when `SAHAARA_API_BASE_URL` is set at build time; otherwise, it reads the bundled CSV. API use remains optional and demo-only. Do not expose the unauthenticated demo endpoints publicly. Production user data, secure document storage, authentication/authorization, persistence, official integrations, and cloud deployment remain unfinished.
