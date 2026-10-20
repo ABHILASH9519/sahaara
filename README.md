@@ -56,6 +56,18 @@ gradle :shared:allTests :apps:android:assembleDebug
 
 The generated APK is expected under `apps/android/build/outputs/apk/debug/` after a successful build. The GitHub Actions workflow also uploads a `sahaara-android-debug-apk` artifact for successful builds. This debug artifact is for development/testing, not production distribution.
 
+## Optional Android API connection
+
+The Android Community Insights screen can use the Go demo API when a base URL is explicitly configured at build time. By default, no endpoint is configured and the app uses its bundled offline CSV.
+
+With Gradle, pass the base URL as a project property (do not include the API path):
+
+```sh
+gradle -PSAHAARA_API_BASE_URL=https://your-host.example :apps:android:assembleDebug
+```
+
+Use only a reachable endpoint you control. HTTPS is required except for local development hosts (`localhost`, `127.0.0.1`, or Android emulator host alias `10.0.2.2`). The client requests the Go API's `/v1/demo/profiles` endpoint in pages of up to 100 records, with a maximum of 500. If the endpoint is unset, unreachable, returns an error, or does not return the expected synthetic-demo response, the screen falls back to the bundled CSV. This is a demo-data connection only; it does not provide authentication, user accounts, secure personal records, or production synchronization. Do not point it at an unauthenticated public server.
+
 ## iOS
 
 Open `apps/ios/SahaaraApp.swift` in an Xcode iOS App project configured for SwiftUI. The repository currently contains the SwiftUI source but not a complete Xcode project/workspace; a native iOS build has not been verified.
