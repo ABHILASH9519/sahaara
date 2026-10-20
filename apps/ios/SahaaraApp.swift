@@ -30,6 +30,7 @@ struct SahaaraHomeView: View {
     @State private var hindi = false
     @State private var showAdd = false
     @State private var newTitle = ""
+    @State private var newDueDate = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
     @State private var reminders = [
         Reminder(title: "Review policy documents", due: "15 Nov 2026"),
         Reminder(title: "Check life-certificate guidance", due: "30 Nov 2026")
@@ -111,16 +112,49 @@ struct SahaaraHomeView: View {
                     Button(hindi ? "English" : "हिन्दी") { hindi.toggle() }
                 }
             }
-            .alert(hindi ? "नई याद दिलाने वाली बात" : "Add a reminder", isPresented: $showAdd) {
-                TextField(hindi ? "शीर्षक" : "Reminder title", text: $newTitle)
-                Button(hindi ? "रद्द करें" : "Cancel", role: .cancel) { newTitle = "" }
-                Button(hindi ? "जोड़ें" : "Add") {
-                    let title = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !title.isEmpty { reminders.append(Reminder(title: title, due: hindi ? "तारीख जोड़ें" : "Date to be set")) }
-                    newTitle = ""
+            .sheet(isPresented: $showAdd) {
+                NavigationStack {
+                    Form {
+                        Section(hindi ? "याद दिलाने वाली बात" : "Reminder details") {
+                            TextField(hindi ? "शीर्षक" : "Reminder title", text: $newTitle)
+                                .textInputAutocapitalization(.sentences)
+                            DatePicker(
+                                hindi ? "तारीख" : "Due date",
+                                selection: $newDueDate,
+                                in: Calendar.current.startOfDay(for: Date())...,
+                                displayedComponents: .date
+                            )
+                        }
+                    }
+                    .navigationTitle(hindi ? "रिमाइंडर जोड़ें" : "Add reminder")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(hindi ? "रद्द करें" : "Cancel") {
+                                newTitle = ""
+                                showAdd = false
+                            }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button(hindi ? "जोड़ें" : "Add") {
+                                let title = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if !title.isEmpty {
+                                    reminders.append(Reminder(title: title, due: formattedDate(newDueDate)))
+                                }
+                                newTitle = ""
+                                showAdd = false
+                            }
+                            .disabled(newTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
+                    }
                 }
+                .presentationDetents([.medium, .large])
             }
         }
+    }
+
+    private func formattedDate(_ date: Date) -> String {
+        date.formatted(.dateTime.day().month(.abbreviated).year())
     }
 
     private func loadReminders() {
