@@ -1,6 +1,9 @@
 package com.sahaara.android
 
 import android.os.Bundle
+import android.content.Context
+import org.json.JSONArray
+import org.json.JSONObject
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -43,12 +46,36 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SahaaraApp() {
+    val context = LocalContext.current
     var hindi by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf<String?>(null) }
     var showAdd by remember { mutableStateOf(false) }
     var newTitle by remember { mutableStateOf("") }
     var nextId by remember { mutableIntStateOf(3) }
     var reminders by remember { mutableStateOf(listOf(ReminderItem(1,"Review policy documents","15 Nov 2026"),ReminderItem(2,"Check life-certificate guidance","30 Nov 2026"))) }
+    var remindersLoaded by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        val prefs = context.getSharedPreferences("sahaara_local", Context.MODE_PRIVATE)
+        val saved = prefs.getString("reminders_json", null)
+        if (!saved.isNullOrBlank()) {
+            try {
+                val array = JSONArray(saved)
+                reminders = (0 until array.length()).map { index ->
+                    val item = array.getJSONObject(index)
+                    ReminderItem(item.getInt("id"), item.getString("title"), item.getString("due"), item.optBoolean("done", false))
+                }
+                nextId = (reminders.maxOfOrNull { it.id } ?: 0) + 1
+            } catch (_: Exception) { /* Keep the safe built-in demo reminders if local data is unreadable. */ }
+        }
+        remindersLoaded = true
+    }
+    LaunchedEffect(reminders, remindersLoaded) {
+        if (remindersLoaded) {
+            val array = JSONArray()
+            reminders.forEach { item -> array.put(JSONObject().put("id", item.id).put("title", item.title).put("due", item.due).put("done", item.done)) }
+            context.getSharedPreferences("sahaara_local", Context.MODE_PRIVATE).edit().putString("reminders_json", array.toString()).apply()
+        }
+    }
     MaterialTheme(colorScheme=lightColorScheme(primary=Forest,secondary=Sage,background=Ivory,surface=Color.White)) {
         Scaffold(containerColor=Ivory,topBar={
             TopAppBar(
