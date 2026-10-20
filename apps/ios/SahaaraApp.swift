@@ -13,10 +13,17 @@ struct SahaaraApp: App {
 }
 
 struct Reminder: Identifiable, Codable {
-    let id = UUID()
+    var id: UUID
     var title: String
     var due: String
-    var done = false
+    var done: Bool
+
+    init(id: UUID = UUID(), title: String, due: String, done: Bool = false) {
+        self.id = id
+        self.title = title
+        self.due = due
+        self.done = done
+    }
 }
 
 struct SahaaraHomeView: View {
