@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -93,8 +94,18 @@ private fun SahaaraApp() {
     }
 }
 
+private data class DemoProfile(
+    val id:String, val name:String, val age:Int, val city:String, val state:String,
+    val area:String, val occupation:String, val lifestyle:String, val experience:Int,
+    val householdIncome:Long, val personalEarnings:Long, val landAcres:Double,
+    val landValuePerAcre:Long, val coverage:Int, val density:Int,
+    val pensioner:Boolean, val veteran:Boolean, val propertyOwner:Boolean,
+    val digitalComfort:String, val careNeed:String
+)
+
 @Composable
 private fun ServiceDetail(selected:String,onAction:(String)->Unit,onHome:()->Unit) {
+    val context = LocalContext.current
     val title=services.firstOrNull{it.third==selected}?.first ?: selected
     val details=when(selected) {
         "Documents" -> listOf("Document categories","Identity & address (demo labels only)","Property documents","Insurance papers","Upload flow: not connected")
@@ -102,19 +113,92 @@ private fun ServiceDetail(selected:String,onAction:(String)->Unit,onHome:()->Uni
         "Healthcare" -> listOf("Appointment checklist","Medicine reminder demo","Care-support preference","No medical records or provider is connected")
         "Contacts" -> listOf("Trusted contact setup preview","Consent and invitation flow not connected","Never add real contact details to this demo")
         "Property" -> listOf("Land area and indicative value fields","City and rural/urban comparisons","Synthetic values only — not market valuations")
-        "Insights" -> listOf("500 synthetic Indian demo profiles","Filters: location, age, occupation, income and lifestyle","Density, land-value and coverage fields","Open the CSV dataset in the repository to inspect all rows")
+        "Insights" -> listOf("500 synthetic Indian demo profiles","Search by name, city, state or occupation","Filter by minimum age","Income, land, coverage and density fields")
         "Care" -> listOf("Care need: none / occasional / regular","Browse sample care-service categories","No booking or payment integration")
         "Opportunities" -> listOf("Occupation and experience fields","Work lifestyle and earning ranges","Synthetic profiles only — not real job listings")
         else -> listOf("Demo section")
     }
+    var profiles by remember { mutableStateOf<List<DemoProfile>>(emptyList()) }
+    var loadError by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    var cityFilter by remember { mutableStateOf("") }
+    var minAge by remember { mutableStateOf("") }
+    var pensionersOnly by remember { mutableStateOf(false) }
+    LaunchedEffect(selected) {
+        if (selected == "Insights") {
+            try {
+                profiles = context.assets.open("demo-profiles.csv").bufferedReader().useLines { lines ->
+                    lines.drop(1).mapNotNull { line ->
+                        val f = line.split(",")
+                        if (f.size < 21) null else try {
+                            DemoProfile(
+                                f[0], f[1], f[2].toInt(), f[3], f[4], f[5], f[6], f[7],
+                                f[8].toInt(), f[9].toLong(), f[10].toLong(),
+                                f[11].toDouble(), f[12].toLong(), f[13].toInt(), f[14].toInt(),
+                                f[15].equals("true", true), f[16].equals("true", true),
+                                f[17].equals("true", true), f[18], f[19]
+                            )
+                        } catch (_: Exception) { null }
+                    }.toList()
+                }
+                loadError = profiles.isEmpty()
+            } catch (_: Exception) { loadError = true }
+        }
+    }
+    val filtered = remember(profiles, query, cityFilter, minAge, pensionersOnly) {
+        val q = query.trim().lowercase()
+        val city = cityFilter.trim().lowercase()
+        val age = minAge.toIntOrNull() ?: 0
+        profiles.filter { p ->
+            (q.isEmpty() || listOf(p.name,p.city,p.state,p.occupation,p.id).any { it.lowercase().contains(q) }) &&
+            (city.isEmpty() || p.city.lowercase().contains(city) || p.state.lowercase().contains(city)) &&
+            p.age >= age && (!pensionersOnly || p.pensioner)
+        }
+    }
     LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         item { Text(title,fontSize=25.sp,fontWeight=FontWeight.Bold,color=Forest); Text("Interactive preview · demo data only",fontSize=13.sp,color=Color.Gray) }
-        items(details) { line -> Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(14.dp)) { Text(line,Modifier.fillMaxWidth().padding(16.dp),color=Ink) } }
-        item { Text("Available demo actions",fontWeight=FontWeight.Bold,fontSize=18.sp,color=Ink) }
-        item { Button(onClick={onAction("Insights")},modifier=Modifier.fillMaxWidth()) { Text("Explore dataset insights") } }
-        item { OutlinedButton(onClick={onAction("Documents")},modifier=Modifier.fillMaxWidth()) { Text("Open documents preview") } }
-        item { OutlinedButton(onClick={onAction("Pension")},modifier=Modifier.fillMaxWidth()) { Text("Open pension preview") } }
+        if (selected == "Insights") {
+            item {
+                Card(colors=CardDefaults.cardColors(containerColor=Forest),shape=RoundedCornerShape(18.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement=Arrangement.spacedBy(5.dp)) {
+                        Text("Offline profile explorer",color=Color.White,fontSize=19.sp,fontWeight=FontWeight.Bold)
+                        Text(if(loadError) "Dataset could not be loaded. Reinstall the latest build." else "${profiles.size} synthetic profiles bundled on this device",color=Color.White,fontSize=14.sp)
+                        Text("Illustrative values only. Not real people, verified statistics, land valuations or eligibility data.",color=Color(0xFFE3F0E8),fontSize=12.sp)
+                    }
+                }
+            }
+            item { OutlinedTextField(value=query,onValueChange={query=it},modifier=Modifier.fillMaxWidth(),label={Text("Search name, city, state, occupation or ID")},singleLine=true) }
+            item { OutlinedTextField(value=cityFilter,onValueChange={cityFilter=it},modifier=Modifier.fillMaxWidth(),label={Text("City or state contains…")},singleLine=true) }
+            item { OutlinedTextField(value=minAge,onValueChange={minAge=it.filter(Char::isDigit).take(3)},modifier=Modifier.fillMaxWidth(),label={Text("Minimum age (optional)")},singleLine=true) }
+            item { Row(verticalAlignment=Alignment.CenterVertically) { Checkbox(checked=pensionersOnly,onCheckedChange={pensionersOnly=it}); Text("Pensioner profiles only",color=Ink) } }
+            item { Text("${filtered.size} matching profiles",fontWeight=FontWeight.Bold,fontSize=18.sp,color=Forest) }
+            if (loadError) item { Text("No profile data available.",color=Color(0xFF9B2C2C)) }
+            items(filtered.take(100),key={it.id}) { p ->
+                Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(16.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(15.dp),verticalArrangement=Arrangement.spacedBy(5.dp)) {
+                        Text(p.name + " · " + p.age, fontSize=17.sp, fontWeight=FontWeight.Bold, color=Ink)
+                        Text(p.city + ", " + p.state + " · " + p.area, color=Forest, fontSize=13.sp)
+                        Text(p.occupation + " · " + p.experience + " years experience · " + p.lifestyle, color=Ink, fontSize=13.sp)
+                        Divider(color=Sage)
+                        Text("Household income: ₹${p.householdIncome}/month",color=Ink,fontSize=13.sp)
+                        Text("Personal earnings: ₹${p.personalEarnings}/month",color=Ink,fontSize=13.sp)
+                        Text("Land: ${p.landAcres} acres · illustrative value/acre: ₹${p.landValuePerAcre}",color=Ink,fontSize=13.sp)
+                        Text("Service coverage: ${p.coverage}% · population density: ${p.density}/km²",color=Ink,fontSize=13.sp)
+                        Text("Pensioner: ${if(p.pensioner) "Yes" else "No"} · Veteran: ${if(p.veteran) "Yes" else "No"} · Property owner: ${if(p.propertyOwner) "Yes" else "No"}",color=Ink,fontSize=12.sp)
+                        Text("Digital comfort: ${p.digitalComfort} · Care support: ${p.careNeed}",color=Ink,fontSize=12.sp)
+                        Text("SYNTHETIC DEMO — NOT A REAL PERSON",color=Color(0xFF61716B),fontSize=10.sp,fontWeight=FontWeight.Bold)
+                    }
+                }
+            }
+            if(filtered.size > 100) item { Text("Showing first 100 matches. Refine your search to narrow results.",fontSize=12.sp,color=Color.Gray) }
+        } else {
+            items(details) { line -> Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(14.dp)) { Text(line,Modifier.fillMaxWidth().padding(16.dp),color=Ink) } }
+            item { Text("Available demo actions",fontWeight=FontWeight.Bold,fontSize=18.sp,color=Ink) }
+            item { Button(onClick={onAction("Insights")},modifier=Modifier.fillMaxWidth()) { Text("Explore dataset insights") } }
+            item { OutlinedButton(onClick={onAction("Documents")},modifier=Modifier.fillMaxWidth()) { Text("Open documents preview") } }
+            item { OutlinedButton(onClick={onAction("Pension")},modifier=Modifier.fillMaxWidth()) { Text("Open pension preview") } }
+        }
         item { TextButton(onClick=onHome,modifier=Modifier.fillMaxWidth()) { Text("Return to home") } }
-        item { Text("Not production-ready: actions navigate between local demo screens. Data persistence, authentication, uploads, bookings and live government integrations are not connected.",fontSize=12.sp,color=Color(0xFF61716B)) }
+        item { Text("Local demo only: no sign-in, secure sync, uploads, bookings, live government integrations or verified financial data are connected.",fontSize=12.sp,color=Color(0xFF61716B)) }
     }
 }
