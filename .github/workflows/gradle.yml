@@ -1,7 +1,7 @@
 name: Kotlin and Android
 on:
   push:
-    paths: ["shared/**", "apps/android/**", "*.gradle.kts", "gradle.properties", ".github/workflows/gradle.yml"]
+    paths: ["shared/**", "apps/android/**", "apps/ios/**", "*.gradle.kts", "gradle.properties", ".github/workflows/**"]
   pull_request:
     paths: ["shared/**", "apps/android/**", "*.gradle.kts", "gradle.properties", ".github/workflows/gradle.yml"]
   workflow_dispatch:
