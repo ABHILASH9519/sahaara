@@ -4,12 +4,12 @@ Sahaara is an accessible mobile-first service platform concept for adults aged 4
 
 ## Current repository status
 
-The native Android and SwiftUI screens include a branded service dashboard, a Hindi/English toggle, and interactive reminder creation/completion with a date picker. Android demo reminders are now persisted locally using app-private preferences; they are not synced to a server. The Go API provides health endpoints, a demo dashboard, and a filterable API over 500 clearly labelled synthetic Indian profiles. This is a development preview, not a production-ready application.
+The native Android and SwiftUI screens include a branded service dashboard, a Hindi/English toggle, and interactive reminder creation/completion with a native due-date picker on both platforms. Android demo reminders are persisted locally using app-private preferences; iOS demo reminders use UserDefaults. Neither platform syncs reminders to a server. Android and iOS Simulator build workflows are configured to run in parallel on app/shared source changes. The Go API provides health endpoints, a demo dashboard, and a filterable API over 500 clearly labelled synthetic Indian profiles. This is a development preview, not a production-ready application.
 
 ## What's implemented
 
 - **Android:** Kotlin + Jetpack Compose accessible dashboard, service tiles, language toggle, local reminder interactions, reminder persistence across restarts, and an offline synthetic-profile explorer.
-- **iOS:** SwiftUI dashboard, language toggle, service tiles, and local reminder interactions.
+- **iOS:** SwiftUI dashboard, language toggle, service tiles, local reminder persistence, and a native due-date picker. Xcode project generation is defined in `apps/ios/project.yml` and the iOS Simulator build runs in GitHub Actions.
 - **Backend:** Go standard-library HTTP server, health/readiness endpoints, demo dashboard, embedded 500-profile synthetic dataset API, summary metrics, filtering/pagination, security headers, panic recovery, and unit tests.
 - **Data design:** initial PostgreSQL schema migration for users, reminders, trusted contacts, and document metadata.
 - **Contracts and operations:** OpenAPI starter, Dockerfile, GitHub Actions workflows, security baseline, and Terraform scaffold.
@@ -20,7 +20,7 @@ The native Android and SwiftUI screens include a branded service dashboard, a Hi
 - Authentication, authorization, account recovery, secure document uploads, trusted-contact consent, notifications, and user-scoped persistence are not yet implemented end to end.
 - No AWS production resources have been deployed or verified.
 - No government, pension, banking, insurance, healthcare, or ECHS integration is connected.
-- The iOS source file is present, but an Xcode project/workspace and signed iOS build pipeline are not yet included.
+- The iOS workflow builds an unsigned Simulator app only; signing, TestFlight/App Store packaging, and device distribution are not configured.
 - The Java/Vaadin admin portal and Terraform are starter scaffolds, not production systems.
 
 **Do not expose the API publicly or put real personal, health, pension, identity, or financial data into this preview.** User-entered content must never be described as verified government information. Never store bank passwords, OTPs, PINs, or raw credentials.
