@@ -147,29 +147,46 @@ private fun ServiceDetail(selected:String,onAction:(String)->Unit,onHome:()->Uni
     }
     var profiles by remember { mutableStateOf<List<DemoProfile>>(emptyList()) }
     var loadError by remember { mutableStateOf(false) }
+    var dataSource by remember { mutableStateOf("Loading demo profiles…") }
     var query by remember { mutableStateOf("") }
     var cityFilter by remember { mutableStateOf("") }
     var minAge by remember { mutableStateOf("") }
     var pensionersOnly by remember { mutableStateOf(false) }
     LaunchedEffect(selected) {
         if (selected == "Insights") {
-            try {
-                profiles = context.assets.open("demo-profiles.csv").bufferedReader().useLines { lines ->
-                    lines.drop(1).mapNotNull { line ->
-                        val f = line.split(",")
-                        if (f.size < 20) null else try {
-                            DemoProfile(
-                                f[0], f[1], f[2].toInt(), f[3], f[4], f[5], f[6], f[7],
-                                f[8].toInt(), f[9].toLong(), f[10].toLong(),
-                                f[11].toDouble(), f[12].toLong(), f[13].toInt(), f[14].toInt(),
-                                f[15].equals("true", true), f[16].equals("true", true),
-                                f[17].equals("true", true), f[18], f[19]
-                            )
-                        } catch (_: Exception) { null }
-                    }.toList()
+            loadError = false
+            dataSource = "Loading demo profiles…"
+            val remoteProfiles = SahaaraApiClient.loadProfiles()
+            if (remoteProfiles != null && remoteProfiles.isNotEmpty()) {
+                profiles = remoteProfiles
+                dataSource = "Go API · synthetic demo data"
+            } else {
+                try {
+                    profiles = context.assets.open("demo-profiles.csv").bufferedReader().useLines { lines ->
+                        lines.drop(1).mapNotNull { line ->
+                            val f = line.split(",")
+                            if (f.size < 20) null else try {
+                                DemoProfile(
+                                    f[0], f[1], f[2].toInt(), f[3], f[4], f[5], f[6], f[7],
+                                    f[8].toInt(), f[9].toLong(), f[10].toLong(),
+                                    f[11].toDouble(), f[12].toLong(), f[13].toInt(), f[14].toInt(),
+                                    f[15].equals("true", true), f[16].equals("true", true),
+                                    f[17].equals("true", true), f[18], f[19]
+                                )
+                            } catch (_: Exception) { null }
+                        }.toList()
+                    }
+                    dataSource = if (SahaaraApiClient.configuredBaseUrl() == null) {
+                        "Offline dataset · endpoint not configured"
+                    } else {
+                        "Offline dataset · API unavailable, invalid, or returned no profiles"
+                    }
+                    loadError = profiles.isEmpty()
+                } catch (_: Exception) {
+                    loadError = true
+                    dataSource = "Profile data unavailable"
                 }
-                loadError = profiles.isEmpty()
-            } catch (_: Exception) { loadError = true }
+            }
         }
     }
     val filtered = remember(profiles, query, cityFilter, minAge, pensionersOnly) {
@@ -189,7 +206,7 @@ private fun ServiceDetail(selected:String,onAction:(String)->Unit,onHome:()->Uni
                 Card(colors=CardDefaults.cardColors(containerColor=Forest),shape=RoundedCornerShape(18.dp)) {
                     Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement=Arrangement.spacedBy(5.dp)) {
                         Text("Offline profile explorer",color=Color.White,fontSize=19.sp,fontWeight=FontWeight.Bold)
-                        Text(if(loadError) "Dataset could not be loaded. Reinstall the latest build." else "${profiles.size} synthetic profiles bundled on this device",color=Color.White,fontSize=14.sp)
+                        Text(if(loadError) "Dataset could not be loaded. Reinstall the latest build." else "${profiles.size} synthetic profiles · $dataSource",color=Color.White,fontSize=14.sp)
                         Text("Illustrative values only. Not real people, verified statistics, land valuations or eligibility data.",color=Color(0xFFE3F0E8),fontSize=12.sp)
                     }
                 }
