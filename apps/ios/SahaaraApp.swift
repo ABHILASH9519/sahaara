@@ -48,58 +48,10 @@ struct SahaaraHomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(hindi ? "नमस्ते 👋" : "Namaste 👋")
-                            .font(.subheadline).foregroundStyle(.white.opacity(0.9))
-                        Text(hindi ? "आपकी ज़रूरी चीज़ें, व्यवस्थित और सुरक्षित।" : "Your important things, organised in one place.")
-                            .font(.system(size: 26, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                        Text(hindi ? "प्रारंभिक डेमो · रिकॉर्ड सत्यापित नहीं हैं" : "Preview mode · No records are verified or synced.")
-                            .font(.caption).foregroundStyle(.white.opacity(0.85))
-                    }
-                    .padding(22).frame(maxWidth: .infinity, alignment: .leading)
-                    .background(SahaaraStyle.forest, in: RoundedRectangle(cornerRadius: 24))
-
-                    Text(hindi ? "आपकी सेवाएँ" : "Your services")
-                        .font(.title2.bold()).foregroundStyle(SahaaraStyle.ink)
-                    ForEach(services, id: \.1) { service in
-                        HStack(spacing: 14) {
-                            Image(systemName: service.0)
-                                .font(.title2).foregroundStyle(SahaaraStyle.forest)
-                                .frame(width: 48, height: 48)
-                                .background(SahaaraStyle.sage, in: RoundedRectangle(cornerRadius: 14))
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(hindi ? translated(service.1) : service.1).font(.headline)
-                                Text(hindi ? translated(service.2) : service.2).font(.subheadline).foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right").foregroundStyle(SahaaraStyle.forest)
-                        }
-                        .padding(14).background(.white, in: RoundedRectangle(cornerRadius: 18))
-                        .accessibilityElement(children: .combine)
-                    }
-
-                    HStack {
-                        Text(hindi ? "याद दिलाने वाली बातें" : "Reminders").font(.title2.bold())
-                        Spacer()
-                        Button(hindi ? "+ जोड़ें" : "+ Add") { showAdd = true }
-                            .font(.headline).tint(SahaaraStyle.forest)
-                    }
-                    ForEach($reminders) { $reminder in
-                        HStack(spacing: 12) {
-                            Toggle(reminder.title, isOn: $reminder.done).labelsHidden()
-                                .tint(SahaaraStyle.forest)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(reminder.title).font(.headline)
-                                    .strikethrough(reminder.done)
-                                Text(reminder.due).font(.caption).foregroundStyle(.secondary)
-                            }
-                            Spacer(minLength: 0)
-                        }
-                        .padding(14).background(.white, in: RoundedRectangle(cornerRadius: 16))
-                    }
-                    Text("Demo only: reminders are saved locally on this device, not synced or stored in a secure document vault. Sign-in, uploads and official integrations are not enabled.")
-                        .font(.footnote).foregroundStyle(.secondary)
+                    welcomeHeader
+                    servicesSection
+                    remindersSection
+                    localStorageNotice
                 }
                 .padding(20)
             }
@@ -112,45 +64,120 @@ struct SahaaraHomeView: View {
                     Button(hindi ? "English" : "हिन्दी") { hindi.toggle() }
                 }
             }
-            .sheet(isPresented: $showAdd) {
-                NavigationStack {
-                    Form {
-                        Section(hindi ? "याद दिलाने वाली बात" : "Reminder details") {
-                            TextField(hindi ? "शीर्षक" : "Reminder title", text: $newTitle)
-                                .textInputAutocapitalization(.sentences)
-                            DatePicker(
-                                hindi ? "तारीख" : "Due date",
-                                selection: $newDueDate,
-                                in: Calendar.current.startOfDay(for: Date())...,
-                                displayedComponents: .date
-                            )
-                        }
+            .sheet(isPresented: $showAdd) { reminderEditor }
+        }
+    }
+
+    private var welcomeHeader: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(hindi ? "नमस्ते 👋" : "Namaste 👋")
+                .font(.subheadline).foregroundStyle(.white.opacity(0.9))
+            Text(hindi ? "आपकी ज़रूरी चीज़ें, व्यवस्थित और सुरक्षित।" : "Your important things, organised in one place.")
+                .font(.system(size: 26, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+            Text(hindi ? "प्रारंभिक डेमो · रिकॉर्ड सत्यापित नहीं हैं" : "Preview mode · No records are verified or synced.")
+                .font(.caption).foregroundStyle(.white.opacity(0.85))
+        }
+        .padding(22)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(SahaaraStyle.forest, in: RoundedRectangle(cornerRadius: 24))
+    }
+
+    private var servicesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(hindi ? "आपकी सेवाएँ" : "Your services")
+                .font(.title2.bold()).foregroundStyle(SahaaraStyle.ink)
+            ForEach(services, id: \.1) { service in
+                HStack(spacing: 14) {
+                    Image(systemName: service.0)
+                        .font(.title2).foregroundStyle(SahaaraStyle.forest)
+                        .frame(width: 48, height: 48)
+                        .background(SahaaraStyle.sage, in: RoundedRectangle(cornerRadius: 14))
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(hindi ? translated(service.1) : service.1).font(.headline)
+                        Text(hindi ? translated(service.2) : service.2)
+                            .font(.subheadline).foregroundStyle(.secondary)
                     }
-                    .navigationTitle(hindi ? "रिमाइंडर जोड़ें" : "Add reminder")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button(hindi ? "रद्द करें" : "Cancel") {
-                                newTitle = ""
-                                showAdd = false
-                            }
-                        }
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button(hindi ? "जोड़ें" : "Add") {
-                                let title = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-                                if !title.isEmpty {
-                                    reminders.append(Reminder(title: title, due: formattedDate(newDueDate)))
-                                }
-                                newTitle = ""
-                                showAdd = false
-                            }
-                            .disabled(newTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        }
-                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").foregroundStyle(SahaaraStyle.forest)
                 }
-                .presentationDetents([.medium, .large])
+                .padding(14)
+                .background(.white, in: RoundedRectangle(cornerRadius: 18))
+                .accessibilityElement(children: .combine)
             }
         }
+    }
+
+    private var remindersSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(hindi ? "याद दिलाने वाली बातें" : "Reminders")
+                    .font(.title2.bold())
+                Spacer()
+                Button(hindi ? "+ जोड़ें" : "+ Add") { showAdd = true }
+                    .font(.headline).tint(SahaaraStyle.forest)
+            }
+            ForEach($reminders) { $reminder in
+                HStack(spacing: 12) {
+                    Toggle(reminder.title, isOn: $reminder.done).labelsHidden()
+                        .tint(SahaaraStyle.forest)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(reminder.title).font(.headline).strikethrough(reminder.done)
+                        Text(reminder.due).font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(14)
+                .background(.white, in: RoundedRectangle(cornerRadius: 16))
+            }
+        }
+    }
+
+    private var localStorageNotice: some View {
+        Text(hindi
+            ? "डेमो: रिमाइंडर केवल इस डिवाइस पर सहेजे जाते हैं।"
+            : "Demo only: reminders are saved locally on this device, not synced or stored in a secure document vault. Sign-in, uploads and official integrations are not enabled.")
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+    }
+
+    private var reminderEditor: some View {
+        NavigationStack {
+            Form {
+                Section(hindi ? "याद दिलाने वाली बात" : "Reminder details") {
+                    TextField(hindi ? "शीर्षक" : "Reminder title", text: $newTitle)
+                        .textInputAutocapitalization(.sentences)
+                    DatePicker(
+                        hindi ? "तारीख" : "Due date",
+                        selection: $newDueDate,
+                        in: Calendar.current.startOfDay(for: Date())...,
+                        displayedComponents: .date
+                    )
+                }
+            }
+            .navigationTitle(hindi ? "रिमाइंडर जोड़ें" : "Add reminder")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(hindi ? "रद्द करें" : "Cancel") {
+                        newTitle = ""
+                        showAdd = false
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(hindi ? "जोड़ें" : "Add") {
+                        let title = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !title.isEmpty {
+                            reminders.append(Reminder(title: title, due: formattedDate(newDueDate)))
+                        }
+                        newTitle = ""
+                        showAdd = false
+                    }
+                    .disabled(newTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 
     private func formattedDate(_ date: Date) -> String {
