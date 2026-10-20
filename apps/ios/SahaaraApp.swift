@@ -12,7 +12,7 @@ struct SahaaraApp: App {
     var body: some Scene { WindowGroup { SahaaraHomeView() } }
 }
 
-struct Reminder: Identifiable {
+struct Reminder: Identifiable, Codable {
     let id = UUID()
     var title: String
     var due: String
@@ -27,6 +27,7 @@ struct SahaaraHomeView: View {
         Reminder(title: "Review policy documents", due: "15 Nov 2026"),
         Reminder(title: "Check life-certificate guidance", due: "30 Nov 2026")
     ]
+    private let remindersStorageKey = "sahaara.local.reminders.v1"
 
     private let services: [(String, String, String)] = [
         ("doc.text", "Documents & records", "Keep important papers organised"),
@@ -89,12 +90,14 @@ struct SahaaraHomeView: View {
                         }
                         .padding(14).background(.white, in: RoundedRectangle(cornerRadius: 16))
                     }
-                    Text("Demo only: reminders stay in this screen's memory and reset when the app restarts. Sign-in, secure sync, uploads and official integrations are not enabled.")
+                    Text("Demo only: reminders are saved locally on this device, not synced or stored in a secure document vault. Sign-in, uploads and official integrations are not enabled.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 .padding(20)
             }
             .background(SahaaraStyle.ivory.ignoresSafeArea())
+            .onAppear(perform: loadReminders)
+            .onChange(of: reminders) { newValue in saveReminders(newValue) }
             .navigationTitle("Sahaara")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -111,6 +114,17 @@ struct SahaaraHomeView: View {
                 }
             }
         }
+    }
+
+    private func loadReminders() {
+        guard let data = UserDefaults.standard.data(forKey: remindersStorageKey),
+              let saved = try? JSONDecoder().decode([Reminder].self, from: data) else { return }
+        reminders = saved
+    }
+
+    private func saveReminders(_ value: [Reminder]) {
+        guard let data = try? JSONEncoder().encode(value) else { return }
+        UserDefaults.standard.set(data, forKey: remindersStorageKey)
     }
 
     private func translated(_ value: String) -> String {
