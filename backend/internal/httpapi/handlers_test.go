@@ -49,6 +49,22 @@ func TestDemoProfilesRejectsInvalidPagination(t *testing.T) {
  rr:=httptest.NewRecorder(); DemoProfiles(rr,httptest.NewRequest(http.MethodGet,"/v1/demo/profiles?page=0",nil))
  if rr.Code!=http.StatusBadRequest { t.Fatalf("status=%d",rr.Code) }
 }
+func TestDemoProfilesHandlesVeryLargePage(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/v1/demo/profiles?page=9223372036854775807&page_size=100", nil)
+	rr := httptest.NewRecorder()
+	DemoProfiles(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+	}
+	var body profilesResponse
+	if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if len(body.Profiles) != 0 || body.Total != 500 {
+		t.Fatalf("expected empty page and total 500, got records=%d total=%d", len(body.Profiles), body.Total)
+	}
+}
+
 func TestDemoSummary(t *testing.T) {
  rr:=httptest.NewRecorder(); DemoSummary(rr,httptest.NewRequest(http.MethodGet,"/v1/demo/summary",nil))
  if rr.Code!=http.StatusOK { t.Fatalf("status=%d body=%s",rr.Code,rr.Body.String()) }
