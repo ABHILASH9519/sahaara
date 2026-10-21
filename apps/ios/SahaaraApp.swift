@@ -12,7 +12,7 @@ struct SahaaraApp: App {
     var body: some Scene { WindowGroup { SahaaraHomeView() } }
 }
 
-struct Reminder: Identifiable, Codable {
+struct Reminder: Identifiable, Codable, Equatable {
     var id: UUID
     var title: String
     var due: String
