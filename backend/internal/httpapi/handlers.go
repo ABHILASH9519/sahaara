@@ -104,9 +104,15 @@ func DemoProfiles(w http.ResponseWriter, r *http.Request) {
 	page, err := queryInt(r,"page",1); if err != nil || page < 1 { writeJSON(w,http.StatusBadRequest,map[string]string{"error":"page_must_be_positive_integer"}); return }
 	pageSize, err := queryInt(r,"page_size",25); if err != nil || pageSize < 1 { writeJSON(w,http.StatusBadRequest,map[string]string{"error":"page_size_must_be_positive_integer"}); return }
 	if pageSize > 100 { pageSize=100 }
-	start := (page-1)*pageSize
-	if start > len(filtered) { start=len(filtered) }
-	end := start+pageSize; if end>len(filtered) { end=len(filtered) }
+	// Clamp before multiplying so a very large page number cannot overflow int
+	// and produce a negative slice index.
+	start := len(filtered)
+	lastPage := (len(filtered) + pageSize - 1) / pageSize
+	if page <= lastPage {
+		start = (page - 1) * pageSize
+	}
+	end := start + pageSize
+	if end > len(filtered) { end = len(filtered) }
 	writeJSON(w,http.StatusOK,profilesResponse{Mode:"synthetic_demo",Disclaimer:demoDisclaimer,Total:len(filtered),Page:page,PageSize:pageSize,Profiles:filtered[start:end]})
 }
 
