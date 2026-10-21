@@ -70,7 +70,7 @@ Use only a reachable endpoint you control. HTTPS is required except for local de
 
 ## iOS
 
-Open `apps/ios/SahaaraApp.swift` in an Xcode iOS App project configured for SwiftUI. The repository currently contains the SwiftUI source but not a complete Xcode project/workspace; a native iOS build has not been verified.
+The SwiftUI app project is generated from `apps/ios/project.yml` using XcodeGen in GitHub Actions. The CI workflow builds an unsigned iOS Simulator app for arm64 and x86_64 architectures; this verifies compilation but does not configure signing, TestFlight/App Store packaging, or physical-device distribution. Check the [iOS build workflow](https://github.com/ABHILASH9519/sahaara/actions/workflows/ios.yml) for the latest result.
 
 ## Next critical milestones
 
