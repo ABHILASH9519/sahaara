@@ -29,6 +29,7 @@ struct Reminder: Identifiable, Codable, Equatable {
 struct SahaaraHomeView: View {
     @State private var hindi = false
     @State private var showAdd = false
+    @State private var selectedService: String? = nil
     @State private var newTitle = ""
     @State private var newDueDate = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
     @State private var reminders = [
@@ -65,6 +66,7 @@ struct SahaaraHomeView: View {
                 }
             }
             .sheet(isPresented: $showAdd) { reminderEditor }
+            .sheet(isPresented: Binding(get: { selectedService != nil }, set: { if !$0 { selectedService = nil } })) { serviceDetail }
         }
     }
 
@@ -88,23 +90,72 @@ struct SahaaraHomeView: View {
             Text(hindi ? "आपकी सेवाएँ" : "Your services")
                 .font(.title2.bold()).foregroundStyle(SahaaraStyle.ink)
             ForEach(services, id: \.1) { service in
-                HStack(spacing: 14) {
-                    Image(systemName: service.0)
-                        .font(.title2).foregroundStyle(SahaaraStyle.forest)
-                        .frame(width: 48, height: 48)
-                        .background(SahaaraStyle.sage, in: RoundedRectangle(cornerRadius: 14))
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(hindi ? translated(service.1) : service.1).font(.headline)
-                        Text(hindi ? translated(service.2) : service.2)
-                            .font(.subheadline).foregroundStyle(.secondary)
+                Button { selectedService = service.1 } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: service.0)
+                            .font(.title2).foregroundStyle(SahaaraStyle.forest)
+                            .frame(width: 48, height: 48)
+                            .background(SahaaraStyle.sage, in: RoundedRectangle(cornerRadius: 14))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(hindi ? translated(service.1) : service.1).font(.headline)
+                            Text(hindi ? translated(service.2) : service.2)
+                                .font(.subheadline).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right").foregroundStyle(SahaaraStyle.forest)
                     }
-                    Spacer()
-                    Image(systemName: "chevron.right").foregroundStyle(SahaaraStyle.forest)
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 18))
+                    .contentShape(RoundedRectangle(cornerRadius: 18))
                 }
-                .padding(14)
-                .background(.white, in: RoundedRectangle(cornerRadius: 18))
-                .accessibilityElement(children: .combine)
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens the service preview")
             }
+        }
+    }
+
+    private var serviceDetail: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Image(systemName: services.first(where: { $0.1 == selectedService })?.0 ?? "info.circle")
+                    .font(.system(size: 36))
+                    .foregroundStyle(SahaaraStyle.forest)
+                Text(selectedService ?? "Service")
+                    .font(.title2.bold())
+                    .foregroundStyle(SahaaraStyle.ink)
+                Text(serviceDescription(for: selectedService))
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                Text("Preview only. No official portal, secure upload, booking, account, or external service is connected.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(SahaaraStyle.sage.opacity(0.6), in: RoundedRectangle(cornerRadius: 14))
+                Spacer()
+            }
+            .padding(22)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(SahaaraStyle.ivory.ignoresSafeArea())
+            .navigationTitle("Service preview")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Close") { selectedService = nil }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private func serviceDescription(for service: String?) -> String {
+        switch service {
+        case "Documents & records": return "Organise a checklist of important identity, property, and insurance papers. Secure document uploads are not enabled."
+        case "Pension & policies": return "Keep personal reminders for policy reviews and pension-related paperwork. No pension authority or insurer is connected."
+        case "Healthcare support": return "Prepare appointment and care-support checklists. This preview does not store medical records or connect to providers."
+        case "Trusted contacts": return "Preview how family support could be organised. Invitations, consent management, and contact syncing are not enabled."
+        default: return "Explore this Sahaara service preview. Any sample information is illustrative and must not be treated as verified advice or official records."
         }
     }
 
