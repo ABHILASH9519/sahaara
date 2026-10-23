@@ -110,6 +110,16 @@ private fun SahaaraApp() {
                         }
                     }
                     item { Row(verticalAlignment=Alignment.CenterVertically) { Text("Reminders",fontSize=21.sp,fontWeight=FontWeight.Bold,color=Ink,modifier=Modifier.weight(1f)); TextButton(onClick={showAdd=true}) { Text("+ Add") } } }
+                    if (reminders.isEmpty()) {
+                        item {
+                            Text(
+                                if (hindi) "अभी कोई रिमाइंडर नहीं है। नया रिमाइंडर जोड़ें।" else "No reminders yet. Add one to keep track of an important date.",
+                                fontSize = 14.sp,
+                                color = Color(0xFF61716B),
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                            )
+                        }
+                    }
                     items(reminders,key={it.id}) { reminder ->
                         Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(16.dp)) {
                             Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically) {
@@ -137,7 +147,7 @@ private fun SahaaraApp() {
             title={Text("Add a reminder")},
             text={
                 Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(value=newTitle,onValueChange={newTitle=it},label={Text("Reminder title")},singleLine=true)
+                    OutlinedTextField(value=newTitle,onValueChange={newTitle=it.take(120)},label={Text("Reminder title (max 120 characters)")},singleLine=true,supportingText={Text("${newTitle.length}/120")})
                     OutlinedButton(onClick={showDatePicker=true},modifier=Modifier.fillMaxWidth()) {
                         Text("Due date: ${Instant.ofEpochMilli(newDueMillis).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}")
                     }
