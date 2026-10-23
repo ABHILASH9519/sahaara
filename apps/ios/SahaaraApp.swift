@@ -180,6 +180,13 @@ struct SahaaraHomeView: View {
                 }
                 .padding(14)
                 .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        reminders.removeAll { $0.id == reminder.id }
+                    } label: {
+                        Label(hindi ? "हटाएँ" : "Delete", systemImage: "trash")
+                    }
+                }
             }
         }
     }
