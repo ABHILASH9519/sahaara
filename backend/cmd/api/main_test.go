@@ -2,7 +2,7 @@ package main
 
 import (
 	"net/http/httptest"
-	"testing"
+	"testing"\n\n\t"sahaara/backend/internal/httpapi"
 )
 
 func TestDemoRoutesDisabledByDefault(t *testing.T) {
@@ -42,5 +42,22 @@ func TestHealthRemainsAvailableWhenDemoRoutesDisabled(t *testing.T) {
 	handler.ServeHTTP(recorder, httptest.NewRequest("GET", "/healthz", nil))
 	if recorder.Code != 200 {
 		t.Fatalf("health status = %d, want 200", recorder.Code)
+	}
+}
+
+func TestSecurityHeadersAppliedToHealth(t *testing.T) {
+	t.Setenv("SAHAARA_ENABLE_DEMO_API", "false")
+	handler := httpapi.SecurityHeaders(newMux())
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, httptest.NewRequest("GET", "/healthz", nil))
+
+	for header, want := range map[string]string{
+		"X-Content-Type-Options": "nosniff",
+		"Cache-Control": "no-store",
+		"Referrer-Policy": "no-referrer",
+	} {
+		if got := recorder.Header().Get(header); got != want {
+			t.Errorf("%s = %q, want %q", header, got, want)
+		}
 	}
 }
