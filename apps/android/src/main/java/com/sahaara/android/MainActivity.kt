@@ -19,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -127,7 +129,11 @@ private fun SahaaraApp() {
                     items(reminders,key={it.id}) { reminder ->
                         Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(16.dp)) {
                             Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically) {
-                                Checkbox(checked=reminder.done,onCheckedChange={checked->reminders=reminders.map{if(it.id==reminder.id)it.copy(done=checked) else it}})
+                                Checkbox(
+                                    checked = reminder.done,
+                                    onCheckedChange = { checked -> reminders = reminders.map { if (it.id == reminder.id) it.copy(done = checked) else it } },
+                                    modifier = Modifier.semantics { contentDescription = "Mark reminder ${reminder.title} as completed" }
+                                )
                                 Column(Modifier.weight(1f)) { Text(reminder.title,color=if(reminder.done)Color.Gray else Ink); Text(reminder.due,fontSize=12.sp,color=Color.Gray) }
                                 TextButton(onClick={reminderToDelete=reminder.id}) { Text(if(hindi) "हटाएँ" else "Delete",color=Color(0xFF9B2C2C)) }
                             }
