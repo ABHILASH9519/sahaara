@@ -27,7 +27,7 @@ struct Reminder: Identifiable, Codable, Equatable {
 }
 
 struct SahaaraHomeView: View {
-    @State private var hindi = false
+    @AppStorage("sahaara.language.hindi") private var hindi = false
     @State private var showAdd = false
     @State private var selectedService: String? = nil
     @State private var newTitle = ""
