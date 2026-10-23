@@ -51,7 +51,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun SahaaraApp() {
     val context = LocalContext.current
-    var hindi by remember { mutableStateOf(false) }
+    val preferences = remember { context.getSharedPreferences("sahaara_local", Context.MODE_PRIVATE) }
+    var hindi by remember { mutableStateOf(preferences.getBoolean("hindi_language", false)) }
+    LaunchedEffect(hindi) {
+        preferences.edit().putBoolean("hindi_language", hindi).apply()
+    }
     var selected by remember { mutableStateOf<String?>(null) }
     var showAdd by remember { mutableStateOf(false) }
     var newTitle by remember { mutableStateOf("") }
