@@ -168,6 +168,13 @@ struct SahaaraHomeView: View {
                 Button(hindi ? "+ जोड़ें" : "+ Add") { showAdd = true }
                     .font(.headline).tint(SahaaraStyle.forest)
             }
+            if reminders.isEmpty {
+                Text(hindi ? "अभी कोई रिमाइंडर नहीं है। नया रिमाइंडर जोड़ें।" : "No reminders yet. Add one to keep track of an important date.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 8)
+            }
             ForEach($reminders) { $reminder in
                 HStack(spacing: 12) {
                     Toggle(reminder.title, isOn: $reminder.done).labelsHidden()
@@ -203,8 +210,15 @@ struct SahaaraHomeView: View {
         NavigationStack {
             Form {
                 Section(hindi ? "याद दिलाने वाली बात" : "Reminder details") {
-                    TextField(hindi ? "शीर्षक" : "Reminder title", text: $newTitle)
+                    TextField(hindi ? "शीर्षक" : "Reminder title (max 120 characters)", text: $newTitle)
                         .textInputAutocapitalization(.sentences)
+                        .onChange(of: newTitle) { _, value in
+                            if value.count > 120 { newTitle = String(value.prefix(120)) }
+                        }
+                    Text("\(newTitle.count)/120")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                     DatePicker(
                         hindi ? "तारीख" : "Due date",
                         selection: $newDueDate,
