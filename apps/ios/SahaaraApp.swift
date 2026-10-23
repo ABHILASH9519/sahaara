@@ -179,6 +179,8 @@ struct SahaaraHomeView: View {
                 HStack(spacing: 12) {
                     Toggle(reminder.title, isOn: $reminder.done).labelsHidden()
                         .tint(SahaaraStyle.forest)
+                        .accessibilityLabel(reminder.title)
+                        .accessibilityValue(reminder.done ? (hindi ? "पूर्ण" : "Completed") : (hindi ? "बाकी" : "Not completed"))
                     VStack(alignment: .leading, spacing: 4) {
                         Text(reminder.title).font(.headline).strikethrough(reminder.done)
                         Text(reminder.due).font(.caption).foregroundStyle(.secondary)
