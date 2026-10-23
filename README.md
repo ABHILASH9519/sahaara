@@ -97,3 +97,18 @@ The SwiftUI app project is generated from `apps/ios/project.yml` using XcodeGen 
 The Android app bundles `apps/android/src/main/assets/demo-profiles.csv` so the Community Insights screen can work offline. It supports searching across profile ID/name/city/state/occupation, filtering by city or state text, minimum age, and pensioner status. It displays up to 100 matching profiles at a time. All 500 records are synthetic test fixtures, not real people or verified statistics; land values and coverage figures must not be used for financial, property, healthcare, or eligibility decisions.
 
 The Go demo API exposes `GET /v1/demo/profiles` and `GET /v1/demo/summary`, but it is not deployed. The Android screen attempts the configured Go demo API when `SAHAARA_API_BASE_URL` is set at build time; otherwise, it reads the bundled CSV. API use remains optional and demo-only. Do not expose the unauthenticated demo endpoints publicly. Production user data, secure document storage, authentication/authorization, persistence, official integrations, and cloud deployment remain unfinished.
+
+
+## PostgreSQL schema status
+
+The SQL files under `database/migrations/` are schema starters, not evidence of a live database connection. Apply them only to a development PostgreSQL database after reviewing the SQL and backing up any existing data. Migration `000002_lifecycle_indexes.up.sql` adds lifecycle timestamps and user-scoped indexes; its matching `.down.sql` is a rollback script.
+
+Before production use:
+- Configure database credentials through a secret manager or deployment secret store, never commit them.
+- Use a least-privilege database role and TLS for connections.
+- Add a migration runner to deployment and test both clean installs and upgrades.
+- Implement authenticated user identity and enforce `user_id` ownership in every query before connecting reminders, trusted contacts, or document metadata.
+- Add integration tests against a disposable PostgreSQL instance.
+- Do not store document bytes or raw credentials in these tables. Document uploads need private object storage, authorization, size/type limits, malware scanning, and retention controls.
+
+The API currently remains a starter and does not connect to PostgreSQL.
