@@ -36,7 +36,16 @@ go vet ./...
 go run ./cmd/api
 ```
 
-The API listens on `:8080` by default.
+To enable the synthetic demo endpoints for local development only:
+
+```sh
+cd backend
+SAHAARA_ENABLE_DEMO_API=true go run ./cmd/api
+```
+
+On PowerShell, use `$env:SAHAARA_ENABLE_DEMO_API="true"; go run ./cmd/api`. Do not enable this flag on a public deployment; the demo endpoints are not authenticated.
+
+The API listens on `:8080` by default. For local synthetic-demo endpoints, explicitly set `SAHAARA_ENABLE_DEMO_API=true` when running the server. Those endpoints are disabled by default to reduce accidental exposure; enabling them does not add authentication and is only appropriate in a trusted development environment.
 
 - `GET /healthz` — liveness
 - `GET /readyz` — process-only readiness (dependency health is not checked)
@@ -44,7 +53,7 @@ The API listens on `:8080` by default.
 - `GET /v1/demo/profiles?page=1&page_size=25` — synthetic profiles (max page size 100); supports `q`, `city`, `state`, `area_type`, `occupation`, `age_min`, `age_max`, `income_min`, `income_max`
 - `GET /v1/demo/summary` — aggregate metrics from the synthetic profiles
 
-The profile API is for UI development and testing only. It does not contain real individuals or verified government, market, land-value, income, health, pension, or service-coverage statistics. The source CSV is available at `data/demo/india-500-synthetic-profiles.csv`.
+The profile API is disabled unless `SAHAARA_ENABLE_DEMO_API=true` is set. It is for trusted local UI development and testing only, is unauthenticated when enabled, and must not be exposed publicly. It does not contain real individuals or verified government, market, land-value, income, health, pension, or service-coverage statistics. The source CSV is available at `data/demo/india-500-synthetic-profiles.csv`.
 
 ## Build Android
 
