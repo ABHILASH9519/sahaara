@@ -161,10 +161,18 @@ struct SahaaraHomeView: View {
 
     private var remindersSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
+            HStack(spacing: 8) {
                 Text(hindi ? "याद दिलाने वाली बातें" : "Reminders")
                     .font(.title2.bold())
-                Spacer()
+                Spacer(minLength: 0)
+                if reminders.contains(where: { $0.done }) {
+                    Button(hindi ? "पूर्ण हटाएँ" : "Clear completed") {
+                        reminders.removeAll { $0.done }
+                    }
+                    .font(.caption.weight(.semibold))
+                    .tint(SahaaraStyle.forest)
+                    .accessibilityHint(hindi ? "सभी पूर्ण रिमाइंडर हटाएँ" : "Removes all completed reminders")
+                }
                 Button(hindi ? "+ जोड़ें" : "+ Add") { showAdd = true }
                     .font(.headline).tint(SahaaraStyle.forest)
             }
