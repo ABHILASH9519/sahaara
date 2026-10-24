@@ -179,12 +179,12 @@ private fun SahaaraApp() {
         )
         if(showAdd) AlertDialog(
             onDismissRequest={showAdd=false},
-            title={Text("Add a reminder")},
+            title={Text(if (hindi) "रिमाइंडर जोड़ें" else "Add a reminder")},
             text={
                 Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(value=newTitle,onValueChange={newTitle=it.take(120)},label={Text("Reminder title (max 120 characters)")},singleLine=true,supportingText={Text("${newTitle.length}/120")})
+                    OutlinedTextField(value=newTitle,onValueChange={newTitle=it.take(120)},label={Text(if (hindi) "शीर्षक (अधिकतम 120 अक्षर)" else "Reminder title (max 120 characters))},singleLine=true,supportingText={Text("${newTitle.length}/120")})
                     OutlinedButton(onClick={showDatePicker=true},modifier=Modifier.fillMaxWidth()) {
-                        Text("Due date: ${Instant.ofEpochMilli(newDueMillis).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}")
+                        Text("${if (hindi) "तारीख: " else "Due date: "}${Instant.ofEpochMilli(newDueMillis).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}")
                     }
                 }
             },
@@ -196,8 +196,8 @@ private fun SahaaraApp() {
                     newTitle=""
                     showAdd=false
                 }
-            }){Text("Add")}},
-            dismissButton={TextButton(onClick={showAdd=false}){Text("Cancel")}}
+            }){Text(if (hindi) "जोड़ें" else "Add")}},
+            dismissButton={TextButton(onClick={showAdd=false}){Text(if (hindi) "रद्द करें" else "Cancel")}}
         )
         if(showDatePicker) {
             val dateState = rememberDatePickerState(initialSelectedDateMillis=newDueMillis)
@@ -206,8 +206,8 @@ private fun SahaaraApp() {
                 confirmButton={TextButton(onClick={
                     dateState.selectedDateMillis?.let { newDueMillis=it }
                     showDatePicker=false
-                }){Text("Set date")}},
-                dismissButton={TextButton(onClick={showDatePicker=false}){Text("Cancel")}}
+                }){Text(if (hindi) "तारीख चुनें" else "Set date")}},
+                dismissButton={TextButton(onClick={showDatePicker=false}){Text(if (hindi) "रद्द करें" else "Cancel")}}
             ) { DatePicker(state=dateState) }
         }
     }
