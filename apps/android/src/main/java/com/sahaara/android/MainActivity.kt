@@ -182,7 +182,7 @@ private fun SahaaraApp() {
             title={Text(if (hindi) "रिमाइंडर जोड़ें" else "Add a reminder")},
             text={
                 Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(value=newTitle,onValueChange={newTitle=it.take(120)},label={Text(if (hindi) "शीर्षक (अधिकतम 120 अक्षर)" else "Reminder title (max 120 characters))},singleLine=true,supportingText={Text("${newTitle.length}/120")})
+                    OutlinedTextField(value=newTitle,onValueChange={newTitle=it.take(120)},label={Text(if (hindi) "शीर्षक (अधिकतम 120 अक्षर)" else "Reminder title (max 120 characters)")},singleLine=true,supportingText={Text("${newTitle.length}/120")})
                     OutlinedButton(onClick={showDatePicker=true},modifier=Modifier.fillMaxWidth()) {
                         Text("${if (hindi) "तारीख: " else "Due date: "}${Instant.ofEpochMilli(newDueMillis).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}")
                     }
