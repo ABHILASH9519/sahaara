@@ -67,6 +67,7 @@ private fun SahaaraApp() {
     var reminders by remember { mutableStateOf(listOf(ReminderItem(1,"Review policy documents","15 Nov 2026"),ReminderItem(2,"Check life-certificate guidance","30 Nov 2026"))) }
     var remindersLoaded by remember { mutableStateOf(false) }
     var reminderToDelete by remember { mutableIntStateOf(-1) }
+    var confirmClearCompleted by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         val prefs = context.getSharedPreferences("sahaara_local", Context.MODE_PRIVATE)
         val saved = prefs.getString("reminders_json", null)
@@ -119,7 +120,7 @@ private fun SahaaraApp() {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(if (hindi) "रिमाइंडर" else "Reminders", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Ink, modifier = Modifier.weight(1f))
                             if (reminders.any { it.done }) {
-                                TextButton(onClick = { reminders = reminders.filterNot { it.done } }) {
+                                TextButton(onClick = { confirmClearCompleted = true }) {
                                     Text(if (hindi) "पूर्ण हटाएँ" else "Clear completed")
                                 }
                             }
@@ -155,6 +156,20 @@ private fun SahaaraApp() {
                 ServiceDetail(selected=selected!!,onAction={ action -> selected=action },onHome={selected=null})
             }
         }
+        if (confirmClearCompleted) AlertDialog(
+            onDismissRequest = { confirmClearCompleted = false },
+            title = { Text(if (hindi) "पूर्ण रिमाइंडर हटाएँ?" else "Clear completed reminders?") },
+            text = { Text(if (hindi) "सभी पूर्ण रिमाइंडर इस डिवाइस से हट जाएँगे।" else "All completed reminders will be removed from this device.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    reminders = reminders.filterNot { it.done }
+                    confirmClearCompleted = false
+                }) { Text(if (hindi) "हटाएँ" else "Clear", color = Color(0xFF9B2C2C)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmClearCompleted = false }) { Text(if (hindi) "रद्द करें" else "Cancel") }
+            }
+        )
         if(reminderToDelete != -1) AlertDialog(
             onDismissRequest={reminderToDelete=-1},
             title={Text(if(hindi) "रिमाइंडर हटाएँ?" else "Delete reminder?")},
