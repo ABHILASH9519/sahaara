@@ -19,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,7 +53,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun SahaaraApp() {
     val context = LocalContext.current
-    var hindi by remember { mutableStateOf(false) }
+    val preferences = remember { context.getSharedPreferences("sahaara_local", Context.MODE_PRIVATE) }
+    var hindi by remember { mutableStateOf(preferences.getBoolean("hindi_language", false)) }
+    LaunchedEffect(hindi) {
+        preferences.edit().putBoolean("hindi_language", hindi).apply()
+    }
     var selected by remember { mutableStateOf<String?>(null) }
     var showAdd by remember { mutableStateOf(false) }
     var newTitle by remember { mutableStateOf("") }
@@ -61,6 +67,7 @@ private fun SahaaraApp() {
     var reminders by remember { mutableStateOf(listOf(ReminderItem(1,"Review policy documents","15 Nov 2026"),ReminderItem(2,"Check life-certificate guidance","30 Nov 2026"))) }
     var remindersLoaded by remember { mutableStateOf(false) }
     var reminderToDelete by remember { mutableIntStateOf(-1) }
+    var confirmClearCompleted by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         val prefs = context.getSharedPreferences("sahaara_local", Context.MODE_PRIVATE)
         val saved = prefs.getString("reminders_json", null)
@@ -109,22 +116,60 @@ private fun SahaaraApp() {
                             }
                         }
                     }
-                    item { Row(verticalAlignment=Alignment.CenterVertically) { Text("Reminders",fontSize=21.sp,fontWeight=FontWeight.Bold,color=Ink,modifier=Modifier.weight(1f)); TextButton(onClick={showAdd=true}) { Text("+ Add") } } }
+                    item {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(if (hindi) "रिमाइंडर" else "Reminders", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Ink, modifier = Modifier.weight(1f))
+                            if (reminders.any { it.done }) {
+                                TextButton(onClick = { confirmClearCompleted = true }) {
+                                    Text(if (hindi) "पूर्ण हटाएँ" else "Clear completed")
+                                }
+                            }
+                            TextButton(onClick = { showAdd = true }) { Text(if (hindi) "+ जोड़ें" else "+ Add") }
+                        }
+                    }
+                    if (reminders.isEmpty()) {
+                        item {
+                            Text(
+                                if (hindi) "अभी कोई रिमाइंडर नहीं है। नया रिमाइंडर जोड़ें।" else "No reminders yet. Add one to keep track of an important date.",
+                                fontSize = 14.sp,
+                                color = Color(0xFF61716B),
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                            )
+                        }
+                    }
                     items(reminders,key={it.id}) { reminder ->
                         Card(colors=CardDefaults.cardColors(containerColor=Color.White),shape=RoundedCornerShape(16.dp)) {
                             Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically) {
-                                Checkbox(checked=reminder.done,onCheckedChange={checked->reminders=reminders.map{if(it.id==reminder.id)it.copy(done=checked) else it}})
+                                Checkbox(
+                                    checked = reminder.done,
+                                    onCheckedChange = { checked -> reminders = reminders.map { if (it.id == reminder.id) it.copy(done = checked) else it } },
+                                    modifier = Modifier.semantics { contentDescription = "Mark reminder ${reminder.title} as completed" }
+                                )
                                 Column(Modifier.weight(1f)) { Text(reminder.title,color=if(reminder.done)Color.Gray else Ink); Text(reminder.due,fontSize=12.sp,color=Color.Gray) }
                                 TextButton(onClick={reminderToDelete=reminder.id}) { Text(if(hindi) "हटाएँ" else "Delete",color=Color(0xFF9B2C2C)) }
                             }
                         }
                     }
-                    item { Text("Demo reminders are saved locally on this device. No sign-in, secure sync or official integrations are enabled.",fontSize=12.sp,color=Color(0xFF61716B)) }
+                    item { Text(if (hindi) "डेमो: रिमाइंडर केवल इस डिवाइस पर सहेजे जाते हैं। साइन-इन, सुरक्षित सिंक या आधिकारिक सेवाएँ जुड़ी नहीं हैं।" else "Demo only: reminders stay on this device. Sign-in, secure sync and official integrations are not enabled.",fontSize=12.sp,color=Color(0xFF61716B)) }
                 }
             } else {
                 ServiceDetail(selected=selected!!,onAction={ action -> selected=action },onHome={selected=null})
             }
         }
+        if (confirmClearCompleted) AlertDialog(
+            onDismissRequest = { confirmClearCompleted = false },
+            title = { Text(if (hindi) "पूर्ण रिमाइंडर हटाएँ?" else "Clear completed reminders?") },
+            text = { Text(if (hindi) "सभी पूर्ण रिमाइंडर इस डिवाइस से हट जाएँगे।" else "All completed reminders will be removed from this device.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    reminders = reminders.filterNot { it.done }
+                    confirmClearCompleted = false
+                }) { Text(if (hindi) "हटाएँ" else "Clear", color = Color(0xFF9B2C2C)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmClearCompleted = false }) { Text(if (hindi) "रद्द करें" else "Cancel") }
+            }
+        )
         if(reminderToDelete != -1) AlertDialog(
             onDismissRequest={reminderToDelete=-1},
             title={Text(if(hindi) "रिमाइंडर हटाएँ?" else "Delete reminder?")},
@@ -134,12 +179,12 @@ private fun SahaaraApp() {
         )
         if(showAdd) AlertDialog(
             onDismissRequest={showAdd=false},
-            title={Text("Add a reminder")},
+            title={Text(if (hindi) "रिमाइंडर जोड़ें" else "Add a reminder")},
             text={
                 Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(value=newTitle,onValueChange={newTitle=it},label={Text("Reminder title")},singleLine=true)
+                    OutlinedTextField(value=newTitle,onValueChange={newTitle=it.take(120)},label={Text(if (hindi) "शीर्षक (अधिकतम 120 अक्षर)" else "Reminder title (max 120 characters)")},singleLine=true,supportingText={Text("${newTitle.length}/120")})
                     OutlinedButton(onClick={showDatePicker=true},modifier=Modifier.fillMaxWidth()) {
-                        Text("Due date: ${Instant.ofEpochMilli(newDueMillis).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}")
+                        Text("${if (hindi) "तारीख: " else "Due date: "}${Instant.ofEpochMilli(newDueMillis).atZone(ZoneId.systemDefault()).toLocalDate().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}")
                     }
                 }
             },
@@ -151,8 +196,8 @@ private fun SahaaraApp() {
                     newTitle=""
                     showAdd=false
                 }
-            }){Text("Add")}},
-            dismissButton={TextButton(onClick={showAdd=false}){Text("Cancel")}}
+            }){Text(if (hindi) "जोड़ें" else "Add")}},
+            dismissButton={TextButton(onClick={showAdd=false}){Text(if (hindi) "रद्द करें" else "Cancel")}}
         )
         if(showDatePicker) {
             val dateState = rememberDatePickerState(initialSelectedDateMillis=newDueMillis)
@@ -161,8 +206,8 @@ private fun SahaaraApp() {
                 confirmButton={TextButton(onClick={
                     dateState.selectedDateMillis?.let { newDueMillis=it }
                     showDatePicker=false
-                }){Text("Set date")}},
-                dismissButton={TextButton(onClick={showDatePicker=false}){Text("Cancel")}}
+                }){Text(if (hindi) "तारीख चुनें" else "Set date")}},
+                dismissButton={TextButton(onClick={showDatePicker=false}){Text(if (hindi) "रद्द करें" else "Cancel")}}
             ) { DatePicker(state=dateState) }
         }
     }

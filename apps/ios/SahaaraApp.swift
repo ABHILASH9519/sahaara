@@ -27,8 +27,9 @@ struct Reminder: Identifiable, Codable, Equatable {
 }
 
 struct SahaaraHomeView: View {
-    @State private var hindi = false
+    @AppStorage("sahaara.language.hindi") private var hindi = false
     @State private var showAdd = false
+    @State private var confirmClearCompleted = false
     @State private var selectedService: String? = nil
     @State private var newTitle = ""
     @State private var newDueDate = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
@@ -64,6 +65,18 @@ struct SahaaraHomeView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(hindi ? "English" : "हिन्दी") { hindi.toggle() }
                 }
+            }
+            .confirmationDialog(
+                hindi ? "पूर्ण रिमाइंडर हटाएँ?" : "Clear completed reminders?",
+                isPresented: $confirmClearCompleted,
+                titleVisibility: .visible
+            ) {
+                Button(hindi ? "हटाएँ" : "Clear", role: .destructive) {
+                    reminders.removeAll { $0.done }
+                }
+                Button(hindi ? "रद्द करें" : "Cancel", role: .cancel) {}
+            } message: {
+                Text(hindi ? "सभी पूर्ण रिमाइंडर इस डिवाइस से हट जाएँगे।" : "All completed reminders will be removed from this device.")
             }
             .sheet(isPresented: $showAdd) { reminderEditor }
             .sheet(isPresented: Binding(get: { selectedService != nil }, set: { if !$0 { selectedService = nil } })) { serviceDetail }
@@ -161,17 +174,34 @@ struct SahaaraHomeView: View {
 
     private var remindersSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
+            HStack(spacing: 8) {
                 Text(hindi ? "याद दिलाने वाली बातें" : "Reminders")
                     .font(.title2.bold())
-                Spacer()
+                Spacer(minLength: 0)
+                if reminders.contains(where: { $0.done }) {
+                    Button(hindi ? "पूर्ण हटाएँ" : "Clear completed") {
+                        confirmClearCompleted = true
+                    }
+                    .font(.caption.weight(.semibold))
+                    .tint(SahaaraStyle.forest)
+                    .accessibilityHint(hindi ? "सभी पूर्ण रिमाइंडर हटाएँ" : "Removes all completed reminders")
+                }
                 Button(hindi ? "+ जोड़ें" : "+ Add") { showAdd = true }
                     .font(.headline).tint(SahaaraStyle.forest)
+            }
+            if reminders.isEmpty {
+                Text(hindi ? "अभी कोई रिमाइंडर नहीं है। नया रिमाइंडर जोड़ें।" : "No reminders yet. Add one to keep track of an important date.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 8)
             }
             ForEach($reminders) { $reminder in
                 HStack(spacing: 12) {
                     Toggle(reminder.title, isOn: $reminder.done).labelsHidden()
                         .tint(SahaaraStyle.forest)
+                        .accessibilityLabel(reminder.title)
+                        .accessibilityValue(reminder.done ? (hindi ? "पूर्ण" : "Completed") : (hindi ? "बाकी" : "Not completed"))
                     VStack(alignment: .leading, spacing: 4) {
                         Text(reminder.title).font(.headline).strikethrough(reminder.done)
                         Text(reminder.due).font(.caption).foregroundStyle(.secondary)
@@ -203,8 +233,15 @@ struct SahaaraHomeView: View {
         NavigationStack {
             Form {
                 Section(hindi ? "याद दिलाने वाली बात" : "Reminder details") {
-                    TextField(hindi ? "शीर्षक" : "Reminder title", text: $newTitle)
+                    TextField(hindi ? "शीर्षक" : "Reminder title (max 120 characters)", text: $newTitle)
                         .textInputAutocapitalization(.sentences)
+                        .onChange(of: newTitle) { _, value in
+                            if value.count > 120 { newTitle = String(value.prefix(120)) }
+                        }
+                    Text("\(newTitle.count)/120")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                     DatePicker(
                         hindi ? "तारीख" : "Due date",
                         selection: $newDueDate,
