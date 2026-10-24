@@ -1,6 +1,6 @@
 import SwiftUI
 
-private enum SahaaraStyle {
+enum SahaaraStyle {
     static let forest = Color(red: 32/255, green: 92/255, blue: 75/255)
     static let sage = Color(red: 220/255, green: 233/255, blue: 223/255)
     static let ivory = Color(red: 250/255, green: 248/255, blue: 242/255)
@@ -43,7 +43,8 @@ struct SahaaraHomeView: View {
         ("doc.text", "Documents & records", "Keep important papers organised"),
         ("indianrupeesign.circle", "Pension & policies", "Keep your records together"),
         ("cross.case", "Healthcare support", "Appointments and support"),
-        ("person.2", "Trusted contacts", "Stay connected with family")
+        ("person.2", "Trusted contacts", "Stay connected with family"),
+        ("chart.bar.xaxis", "Community insights", "Explore synthetic demo profiles")
     ]
 
     var body: some View {
@@ -59,7 +60,7 @@ struct SahaaraHomeView: View {
             }
             .background(SahaaraStyle.ivory.ignoresSafeArea())
             .onAppear(perform: loadReminders)
-            .onChange(of: reminders) { newValue in saveReminders(newValue) }
+            .onChange(of: reminders) { _, newValue in saveReminders(newValue) }
             .navigationTitle("Sahaara")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -128,9 +129,33 @@ struct SahaaraHomeView: View {
         }
     }
 
+    @ViewBuilder
     private var serviceDetail: some View {
+        if selectedService == "Community insights" {
+            NavigationStack {
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("Community insights").font(.headline)
+                        Spacer()
+                        Button("Close") { selectedService = nil }
+                            .buttonStyle(.bordered)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    CommunityInsightsView()
+                }
+                .navigationBarHidden(true)
+            }
+            .presentationDetents([.medium, .large])
+        } else {
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("Service preview").font(.headline)
+                    Spacer()
+                    Button("Close") { selectedService = nil }
+                        .buttonStyle(.bordered)
+                }
                 Image(systemName: services.first(where: { $0.1 == selectedService })?.0 ?? "info.circle")
                     .font(.system(size: 36))
                     .foregroundStyle(SahaaraStyle.forest)
@@ -151,15 +176,10 @@ struct SahaaraHomeView: View {
             .padding(22)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(SahaaraStyle.ivory.ignoresSafeArea())
-            .navigationTitle("Service preview")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Close") { selectedService = nil }
-                }
-            }
+            .navigationBarHidden(true)
         }
         .presentationDetents([.medium, .large])
+        }
     }
 
     private func serviceDescription(for service: String?) -> String {
@@ -168,6 +188,7 @@ struct SahaaraHomeView: View {
         case "Pension & policies": return "Keep personal reminders for policy reviews and pension-related paperwork. No pension authority or insurer is connected."
         case "Healthcare support": return "Prepare appointment and care-support checklists. This preview does not store medical records or connect to providers."
         case "Trusted contacts": return "Preview how family support could be organised. Invitations, consent management, and contact syncing are not enabled."
+        case "Community insights": return "Explore clearly labelled synthetic profiles from the optional Go demo API. These are not real people or verified statistics."
         default: return "Explore this Sahaara service preview. Any sample information is illustrative and must not be treated as verified advice or official records."
         }
     }
