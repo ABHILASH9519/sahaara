@@ -29,6 +29,7 @@ struct Reminder: Identifiable, Codable, Equatable {
 struct SahaaraHomeView: View {
     @AppStorage("sahaara.language.hindi") private var hindi = false
     @State private var showAdd = false
+    @State private var confirmClearCompleted = false
     @State private var selectedService: String? = nil
     @State private var newTitle = ""
     @State private var newDueDate = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
@@ -64,6 +65,18 @@ struct SahaaraHomeView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(hindi ? "English" : "हिन्दी") { hindi.toggle() }
                 }
+            }
+            .confirmationDialog(
+                hindi ? "पूर्ण रिमाइंडर हटाएँ?" : "Clear completed reminders?",
+                isPresented: $confirmClearCompleted,
+                titleVisibility: .visible
+            ) {
+                Button(hindi ? "हटाएँ" : "Clear", role: .destructive) {
+                    reminders.removeAll { $0.done }
+                }
+                Button(hindi ? "रद्द करें" : "Cancel", role: .cancel) {}
+            } message: {
+                Text(hindi ? "सभी पूर्ण रिमाइंडर इस डिवाइस से हट जाएँगे।" : "All completed reminders will be removed from this device.")
             }
             .sheet(isPresented: $showAdd) { reminderEditor }
             .sheet(isPresented: Binding(get: { selectedService != nil }, set: { if !$0 { selectedService = nil } })) { serviceDetail }
@@ -167,7 +180,7 @@ struct SahaaraHomeView: View {
                 Spacer(minLength: 0)
                 if reminders.contains(where: { $0.done }) {
                     Button(hindi ? "पूर्ण हटाएँ" : "Clear completed") {
-                        reminders.removeAll { $0.done }
+                        confirmClearCompleted = true
                     }
                     .font(.caption.weight(.semibold))
                     .tint(SahaaraStyle.forest)
