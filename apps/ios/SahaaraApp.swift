@@ -132,10 +132,18 @@ struct SahaaraHomeView: View {
     private var serviceDetail: some View {
         if selectedService == "Community insights" {
             NavigationStack {
-                CommunityInsightsView()
-                    .navigationTitle("Community insights")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar(content: { ToolbarItem(placement: ToolbarItemPlacement.topBarTrailing, content: { Button(action: { selectedService = nil }, label: { Text("Close") }) }) })
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("Community insights").font(.headline)
+                        Spacer()
+                        Button("Close") { selectedService = nil }
+                            .buttonStyle(.bordered)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    CommunityInsightsView()
+                }
+                .navigationBarHidden(true)
             }
             .presentationDetents([.medium, .large])
         } else {
