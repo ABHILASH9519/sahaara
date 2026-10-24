@@ -43,7 +43,8 @@ struct SahaaraHomeView: View {
         ("doc.text", "Documents & records", "Keep important papers organised"),
         ("indianrupeesign.circle", "Pension & policies", "Keep your records together"),
         ("cross.case", "Healthcare support", "Appointments and support"),
-        ("person.2", "Trusted contacts", "Stay connected with family")
+        ("person.2", "Trusted contacts", "Stay connected with family"),
+        ("chart.bar.xaxis", "Community insights", "Explore synthetic demo profiles")
     ]
 
     var body: some View {
@@ -129,6 +130,15 @@ struct SahaaraHomeView: View {
     }
 
     private var serviceDetail: some View {
+        if selectedService == "Community insights" {
+            NavigationStack {
+                CommunityInsightsView()
+                    .navigationTitle("Community insights")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Close") { selectedService = nil } } }
+            }
+            .presentationDetents([.medium, .large])
+        } else {
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
                 Image(systemName: services.first(where: { $0.1 == selectedService })?.0 ?? "info.circle")
@@ -160,6 +170,7 @@ struct SahaaraHomeView: View {
             }
         }
         .presentationDetents([.medium, .large])
+        }
     }
 
     private func serviceDescription(for service: String?) -> String {
@@ -168,6 +179,7 @@ struct SahaaraHomeView: View {
         case "Pension & policies": return "Keep personal reminders for policy reviews and pension-related paperwork. No pension authority or insurer is connected."
         case "Healthcare support": return "Prepare appointment and care-support checklists. This preview does not store medical records or connect to providers."
         case "Trusted contacts": return "Preview how family support could be organised. Invitations, consent management, and contact syncing are not enabled."
+        case "Community insights": return "Explore clearly labelled synthetic profiles from the optional Go demo API. These are not real people or verified statistics."
         default: return "Explore this Sahaara service preview. Any sample information is illustrative and must not be treated as verified advice or official records."
         }
     }
