@@ -115,7 +115,17 @@ private fun SahaaraApp() {
                             }
                         }
                     }
-                    item { Row(verticalAlignment=Alignment.CenterVertically) { Text("Reminders",fontSize=21.sp,fontWeight=FontWeight.Bold,color=Ink,modifier=Modifier.weight(1f)); TextButton(onClick={showAdd=true}) { Text("+ Add") } } }
+                    item {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(if (hindi) "रिमाइंडर" else "Reminders", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = Ink, modifier = Modifier.weight(1f))
+                            if (reminders.any { it.done }) {
+                                TextButton(onClick = { reminders = reminders.filterNot { it.done } }) {
+                                    Text(if (hindi) "पूर्ण हटाएँ" else "Clear completed")
+                                }
+                            }
+                            TextButton(onClick = { showAdd = true }) { Text(if (hindi) "+ जोड़ें" else "+ Add") }
+                        }
+                    }
                     if (reminders.isEmpty()) {
                         item {
                             Text(
@@ -139,7 +149,7 @@ private fun SahaaraApp() {
                             }
                         }
                     }
-                    item { Text("Demo reminders are saved locally on this device. No sign-in, secure sync or official integrations are enabled.",fontSize=12.sp,color=Color(0xFF61716B)) }
+                    item { Text(if (hindi) "डेमो: रिमाइंडर केवल इस डिवाइस पर सहेजे जाते हैं। साइन-इन, सुरक्षित सिंक या आधिकारिक सेवाएँ जुड़ी नहीं हैं।" else "Demo only: reminders stay on this device. Sign-in, secure sync and official integrations are not enabled.",fontSize=12.sp,color=Color(0xFF61716B)) }
                 }
             } else {
                 ServiceDetail(selected=selected!!,onAction={ action -> selected=action },onHome={selected=null})
