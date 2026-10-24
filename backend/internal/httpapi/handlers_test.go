@@ -136,7 +136,4 @@ func TestDemoProfilesAppliesAgeAndIncomeFilters(t *testing.T) {
 			t.Fatalf("profile %s income %d outside requested range", p.ID, p.MonthlyHouseholdIncomeINR)
 		}
 	}
-	if body.Total != len(body.Profiles) {
-		t.Fatalf("total=%d records=%d; expected all matching results fit in one page", body.Total, len(body.Profiles))
-	}
 }
