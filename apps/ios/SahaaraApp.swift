@@ -149,6 +149,12 @@ struct SahaaraHomeView: View {
         } else {
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("Service preview").font(.headline)
+                    Spacer()
+                    Button("Close") { selectedService = nil }
+                        .buttonStyle(.bordered)
+                }
                 Image(systemName: services.first(where: { $0.1 == selectedService })?.0 ?? "info.circle")
                     .font(.system(size: 36))
                     .foregroundStyle(SahaaraStyle.forest)
@@ -169,13 +175,7 @@ struct SahaaraHomeView: View {
             .padding(22)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(SahaaraStyle.ivory.ignoresSafeArea())
-            .navigationTitle("Service preview")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Close") { selectedService = nil }
-                }
-            }
+            .navigationBarHidden(true)
         }
         .presentationDetents([.medium, .large])
         }
