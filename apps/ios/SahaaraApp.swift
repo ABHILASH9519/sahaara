@@ -135,7 +135,7 @@ struct SahaaraHomeView: View {
                 CommunityInsightsView()
                     .navigationTitle("Community insights")
                     .navigationBarTitleDisplayMode(.inline)
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Close") { selectedService = nil } } }
+                    .toolbar(content: { ToolbarItem(placement: ToolbarItemPlacement.topBarTrailing, content: { Button(action: { selectedService = nil }, label: { Text("Close") }) }) })
             }
             .presentationDetents([.medium, .large])
         } else {
