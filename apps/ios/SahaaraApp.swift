@@ -1,6 +1,6 @@
 import SwiftUI
 
-private enum SahaaraStyle {
+enum SahaaraStyle {
     static let forest = Color(red: 32/255, green: 92/255, blue: 75/255)
     static let sage = Color(red: 220/255, green: 233/255, blue: 223/255)
     static let ivory = Color(red: 250/255, green: 248/255, blue: 242/255)
