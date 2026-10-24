@@ -170,23 +170,41 @@ struct CommunityInsightsView: View {
         }
         state = .loading
         do {
-            var components = URLComponents(url: baseURL.appendingPathComponent("v1/demo/profiles"), resolvingAgainstBaseURL: false)
-            components?.queryItems = [URLQueryItem(name: "page", value: "1"), URLQueryItem(name: "page_size", value: "100")]
-            guard let url = components?.url else { throw URLError(.badURL) }
-            var request = URLRequest(url: url)
-            request.httpMethod = "GET"
-            request.timeoutInterval = 10
-            request.setValue("application/json", forHTTPHeaderField: "Accept")
-            request.setValue("no-store", forHTTPHeaderField: "Cache-Control")
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-                throw URLError(.badServerResponse)
-            }
-            let result = try JSONDecoder().decode(DemoProfilesResponse.self, from: data)
-            guard result.mode == "synthetic_demo" else {
-                throw URLError(.cannotDecodeContentData)
-            }
-            profiles = Array(result.profiles.prefix(100))
+            let pageSize = 100
+            let maximumProfiles = 500
+            var allProfiles: [DemoProfile] = []
+            var currentPage = 1
+            var expectedTotal = 0
+
+            repeat {
+                var components = URLComponents(url: baseURL.appendingPathComponent("v1/demo/profiles"), resolvingAgainstBaseURL: false)
+                components?.queryItems = [
+                    URLQueryItem(name: "page", value: String(currentPage)),
+                    URLQueryItem(name: "page_size", value: String(pageSize))
+                ]
+                guard let url = components?.url else { throw URLError(.badURL) }
+                var request = URLRequest(url: url)
+                request.httpMethod = "GET"
+                request.timeoutInterval = 10
+                request.setValue("application/json", forHTTPHeaderField: "Accept")
+                request.setValue("no-store", forHTTPHeaderField: "Cache-Control")
+                let (data, response) = try await URLSession.shared.data(for: request)
+                guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+                    throw URLError(.badServerResponse)
+                }
+                let result = try JSONDecoder().decode(DemoProfilesResponse.self, from: data)
+                guard result.mode == "synthetic_demo" else {
+                    throw URLError(.cannotDecodeContentData)
+                }
+                if currentPage == 1 {
+                    expectedTotal = min(max(result.total, result.profiles.count), maximumProfiles)
+                }
+                guard !result.profiles.isEmpty else { break }
+                allProfiles.append(contentsOf: result.profiles)
+                currentPage += 1
+            } while allProfiles.count < expectedTotal && currentPage <= (maximumProfiles / pageSize)
+
+            profiles = Array(allProfiles.prefix(maximumProfiles))
             guard !profiles.isEmpty else {
                 state = .unavailable("The API responded but returned no profiles. Confirm the demo API is enabled and the dataset is available.")
                 return
