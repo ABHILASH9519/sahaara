@@ -60,7 +60,7 @@ struct SahaaraHomeView: View {
             }
             .background(SahaaraStyle.ivory.ignoresSafeArea())
             .onAppear(perform: loadReminders)
-            .onChange(of: reminders) { newValue in saveReminders(newValue) }
+            .onChange(of: reminders) { _, newValue in saveReminders(newValue) }
             .navigationTitle("Sahaara")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -129,6 +129,7 @@ struct SahaaraHomeView: View {
         }
     }
 
+    @ViewBuilder
     private var serviceDetail: some View {
         if selectedService == "Community insights" {
             NavigationStack {
