@@ -157,3 +157,27 @@ func TestDemoProfilesCapsPageSizeAtOneHundred(t *testing.T) {
 		t.Fatalf("expected page size and result count of 100, got pageSize=%d records=%d", body.PageSize, len(body.Profiles))
 	}
 }
+
+
+func TestRecovererReturnsStructuredJSON(t *testing.T) {
+	handler := Recoverer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		panic("simulated handler failure")
+	}))
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/", nil))
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+	}
+	if got := rr.Header().Get("Content-Type"); !strings.HasPrefix(got, "application/json") {
+		t.Fatalf("content type=%q, want application/json", got)
+	}
+
+	var body map[string]string
+	if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body["error"] != "internal_error" {
+		t.Fatalf("unexpected error payload: %v", body)
+	}
+}
