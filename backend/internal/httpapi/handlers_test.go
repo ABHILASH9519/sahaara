@@ -103,3 +103,57 @@ func TestDemoProfilesRejectsOversizedTextFilters(t *testing.T) {
 		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
 	}
 }
+
+
+func TestDemoProfilesRejectsMalformedNumericFilters(t *testing.T) {
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{name: "non-numeric minimum age", query: "age_min=adult"},
+		{name: "non-numeric maximum age", query: "age_max=old"},
+		{name: "non-numeric minimum income", query: "income_min=unknown"},
+		{name: "non-numeric maximum income", query: "income_max=unknown"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			DemoProfiles(rr, httptest.NewRequest(http.MethodGet, "/v1/demo/profiles?"+tt.query, nil))
+			if rr.Code != http.StatusBadRequest {
+				t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+			}
+		})
+	}
+}
+
+func TestDemoProfilesRejectsInvertedFilterRanges(t *testing.T) {
+	tests := []string{
+		"age_min=70&age_max=20",
+		"income_min=90000&income_max=10000",
+	}
+
+	for _, query := range tests {
+		rr := httptest.NewRecorder()
+		DemoProfiles(rr, httptest.NewRequest(http.MethodGet, "/v1/demo/profiles?"+query, nil))
+		if rr.Code != http.StatusBadRequest {
+			t.Errorf("query=%q status=%d body=%s", query, rr.Code, rr.Body.String())
+		}
+	}
+}
+
+func TestDemoProfilesCapsPageSizeAtOneHundred(t *testing.T) {
+	rr := httptest.NewRecorder()
+	DemoProfiles(rr, httptest.NewRequest(http.MethodGet, "/v1/demo/profiles?page_size=500", nil))
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+	}
+
+	var body profilesResponse
+	if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body.PageSize != 100 || len(body.Profiles) != 100 {
+		t.Fatalf("expected page size and result count of 100, got pageSize=%d records=%d", body.PageSize, len(body.Profiles))
+	}
+}
