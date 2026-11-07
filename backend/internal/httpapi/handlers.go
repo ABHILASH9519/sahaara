@@ -167,6 +167,16 @@ func loadDemoProfiles() ([]DemoProfile,error) {
 func queryInt(r *http.Request,key string,def int)(int,error){v:=r.URL.Query().Get(key);if v==""{return def,nil};return strconv.Atoi(v)}
 func queryInt64(r *http.Request,key string,def int64)(int64,error){v:=r.URL.Query().Get(key);if v==""{return def,nil};return strconv.ParseInt(v,10,64)}
 
-func Recoverer(next http.Handler) http.Handler { return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { defer func(){ if recovered := recover(); recovered != nil { log.Printf("panic recovered: %v\\n%s", recovered, debug.Stack()); http.Error(w, `{"error":"internal_error"}`, http.StatusInternalServerError) } }(); next.ServeHTTP(w,r) }) }
+func Recoverer(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				log.Printf("panic recovered: %v\\n%s", recovered, debug.Stack())
+				writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal_error"})
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
+}
 func SecurityHeaders(next http.Handler) http.Handler { return http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){ w.Header().Set("X-Content-Type-Options","nosniff"); w.Header().Set("Cache-Control","no-store"); w.Header().Set("Referrer-Policy","no-referrer"); next.ServeHTTP(w,r) }) }
 func writeJSON(w http.ResponseWriter, status int, value any) { w.Header().Set("Content-Type","application/json; charset=utf-8"); w.WriteHeader(status); if err := json.NewEncoder(w).Encode(value); err != nil { log.Printf("write response: %v",err) } }
