@@ -84,10 +84,18 @@ func DemoProfiles(w http.ResponseWriter, r *http.Request) {
 	state := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("state")))
 	area := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("area_type")))
 	occupation := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("occupation")))
+	if len(q) > 120 || len(city) > 80 || len(state) > 80 || len(area) > 40 || len(occupation) > 80 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error":"filter_value_too_long"})
+		return
+	}
 	minAge, err := queryInt(r, "age_min", 0); if err != nil { writeJSON(w, http.StatusBadRequest, map[string]string{"error":"invalid_age_min"}); return }
 	maxAge, err := queryInt(r, "age_max", 150); if err != nil { writeJSON(w, http.StatusBadRequest, map[string]string{"error":"invalid_age_max"}); return }
 	minIncome, err := queryInt64(r, "income_min", 0); if err != nil { writeJSON(w, http.StatusBadRequest, map[string]string{"error":"invalid_income_min"}); return }
 	maxIncome, err := queryInt64(r, "income_max", int64(^uint64(0)>>1)); if err != nil { writeJSON(w, http.StatusBadRequest, map[string]string{"error":"invalid_income_max"}); return }
+	if minAge < 0 || maxAge > 150 || minIncome < 0 || maxIncome < 0 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error":"filter_range_out_of_bounds"})
+		return
+	}
 	if minAge > maxAge || minIncome > maxIncome { writeJSON(w, http.StatusBadRequest, map[string]string{"error":"minimum_must_not_exceed_maximum"}); return }
 	filtered := make([]DemoProfile, 0, len(profiles))
 	for _, p := range profiles {
