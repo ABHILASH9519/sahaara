@@ -72,3 +72,34 @@ func TestDemoSummary(t *testing.T) {
  if err:=json.Unmarshal(rr.Body.Bytes(),&body);err!=nil{t.Fatal(err)}
  if body.TotalProfiles!=500 || body.States<1 || body.Cities<1 { t.Fatalf("unexpected summary: %+v",body) }
 }
+
+
+func TestDemoProfilesRejectsOutOfRangeFilters(t *testing.T) {
+	tests := []struct {
+		name string
+		query string
+	}{
+		{name: "negative minimum age", query: "age_min=-1"},
+		{name: "age above supported range", query: "age_max=151"},
+		{name: "negative income", query: "income_min=-1"},
+		{name: "negative maximum income", query: "income_max=-1"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			DemoProfiles(rr, httptest.NewRequest(http.MethodGet, "/v1/demo/profiles?"+tt.query, nil))
+			if rr.Code != http.StatusBadRequest {
+				t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+			}
+		})
+	}
+}
+
+func TestDemoProfilesRejectsOversizedTextFilters(t *testing.T) {
+	query := "/v1/demo/profiles?q=" + strings.Repeat("a", 121)
+	rr := httptest.NewRecorder()
+	DemoProfiles(rr, httptest.NewRequest(http.MethodGet, query, nil))
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("status=%d body=%s", rr.Code, rr.Body.String())
+	}
+}
