@@ -60,6 +60,7 @@ private fun SahaaraApp() {
     var nextId by remember { mutableIntStateOf(3) }
     var reminders by remember { mutableStateOf(listOf(ReminderItem(1,"Review policy documents","15 Nov 2026"),ReminderItem(2,"Check life-certificate guidance","30 Nov 2026"))) }
     var remindersLoaded by remember { mutableStateOf(false) }
+    var reminderToDelete by remember { mutableIntStateOf(-1) }
     LaunchedEffect(Unit) {
         val prefs = context.getSharedPreferences("sahaara_local", Context.MODE_PRIVATE)
         val saved = prefs.getString("reminders_json", null)
@@ -114,6 +115,7 @@ private fun SahaaraApp() {
                             Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically) {
                                 Checkbox(checked=reminder.done,onCheckedChange={checked->reminders=reminders.map{if(it.id==reminder.id)it.copy(done=checked) else it}})
                                 Column(Modifier.weight(1f)) { Text(reminder.title,color=if(reminder.done)Color.Gray else Ink); Text(reminder.due,fontSize=12.sp,color=Color.Gray) }
+                                TextButton(onClick={reminderToDelete=reminder.id}) { Text(if(hindi) "हटाएँ" else "Delete",color=Color(0xFF9B2C2C)) }
                             }
                         }
                     }
@@ -123,6 +125,13 @@ private fun SahaaraApp() {
                 ServiceDetail(selected=selected!!,onAction={ action -> selected=action },onHome={selected=null})
             }
         }
+        if(reminderToDelete != -1) AlertDialog(
+            onDismissRequest={reminderToDelete=-1},
+            title={Text(if(hindi) "रिमाइंडर हटाएँ?" else "Delete reminder?")},
+            text={Text(if(hindi) "यह रिमाइंडर इस डिवाइस से हट जाएगा।" else "This reminder will be removed from this device.")},
+            confirmButton={TextButton(onClick={reminders=reminders.filterNot{it.id==reminderToDelete};reminderToDelete=-1}) { Text(if(hindi) "हटाएँ" else "Delete",color=Color(0xFF9B2C2C)) }},
+            dismissButton={TextButton(onClick={reminderToDelete=-1}) { Text(if(hindi) "रद्द करें" else "Cancel") }}
+        )
         if(showAdd) AlertDialog(
             onDismissRequest={showAdd=false},
             title={Text("Add a reminder")},
