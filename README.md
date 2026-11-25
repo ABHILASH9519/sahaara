@@ -1,5 +1,23 @@
 # Sahaara
 
+<!-- portfolio-visual-start -->
+## Engineering overview
+
+![Go](https://img.shields.io/badge/Stack-Go-176b99) ![Stars](https://img.shields.io/github/stars/ABHILASH9519/sahaara)
+
+![Animated workflow](docs/portfolio-flow.svg)
+
+```mermaid
+flowchart LR
+  N0["Mobile UI"] --> N1["Local reminders"] --> N2["Demo API"] --> N3["Synthetic data"]
+```
+
+Illustrative workflow: Mobile UI → Local reminders → Demo API → Synthetic data. See the implementation and setup below for actual capabilities and prerequisites.
+
+[Developer profile](https://github.com/ABHILASH9519) · [Issues](https://github.com/ABHILASH9519/sahaara/issues)
+<!-- portfolio-visual-end -->
+
+
 Sahaara is an accessible mobile-first service platform concept for adults aged 40+, senior citizens, pensioners, veterans, and trusted family supporters.
 
 ## Current repository status
