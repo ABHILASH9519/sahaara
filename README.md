@@ -106,3 +106,23 @@ The SwiftUI app project is generated from `apps/ios/project.yml` using XcodeGen 
 The Android app bundles `apps/android/src/main/assets/demo-profiles.csv` so the Community Insights screen can work offline. It supports searching across profile ID/name/city/state/occupation, filtering by city or state text, minimum age, and pensioner status. It displays up to 100 matching profiles at a time. All 500 records are synthetic test fixtures, not real people or verified statistics; land values and coverage figures must not be used for financial, property, healthcare, or eligibility decisions.
 
 The Go demo API exposes `GET /v1/demo/profiles` and `GET /v1/demo/summary`, but it is not deployed. The Android screen attempts the configured Go demo API when `SAHAARA_API_BASE_URL` is set at build time; otherwise, it reads the bundled CSV. API use remains optional and demo-only. Do not expose the unauthenticated demo endpoints publicly. Production user data, secure document storage, authentication/authorization, persistence, official integrations, and cloud deployment remain unfinished.
+
+
+## Technical walkthrough
+
+```mermaid
+sequenceDiagram
+    participant P0 as Mobile UI
+    participant P1 as Local reminders
+    participant P2 as Demo API
+    participant P3 as Synthetic profiles
+    P0->>P1: Local reminders
+    P1->>P2: Demo API
+    P2->>P3: Synthetic profiles
+```
+
+**Engineering review focus:** Accessible mobile previews; no verified authenticated production synchronization.
+
+This diagram is illustrative, not a recorded execution trace. Refer to the existing run instructions for verification.
+
+![Last commit](https://img.shields.io/github/last-commit/ABHILASH9519/sahaara) ![Open issues](https://img.shields.io/github/issues/ABHILASH9519/sahaara)
